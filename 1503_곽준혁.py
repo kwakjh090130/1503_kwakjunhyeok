@@ -1,5 +1,37 @@
-import subprocess
+import os
 import sys
+import urllib.request
+import zipfile
+import shutil
+import subprocess
+
+script_dir = os.path.dirname(os.path.abspath(__file__))  # 이 파일이 있는 위치
+target_folder_path = os.path.join(script_dir, "1503_kwakjunhyeok")
+
+def auto_download_repo():
+    zip_url = "https://github.com/kwakjh090130/1503_kwakjunhyeok/archive/refs/heads/main.zip"
+    zip_name = os.path.join(script_dir, "repo.zip")  # zip도 이 파일 옆에 다운로드
+
+    extract_temp_folder = os.path.join(script_dir, "1503_kwakjunhyeok-main")
+
+    # 이미 폴더가 있으면 다운로드 스킵
+    if os.path.exists(target_folder_path):
+        print("이미 설치된 폴더가 있어 스킵합니다.")
+        return
+
+    print("ZIP 파일 다운로드 중...")
+    urllib.request.urlretrieve(zip_url, zip_name)
+
+    print("압축 해제 중...")
+    with zipfile.ZipFile(zip_name, 'r') as zip_ref:
+        zip_ref.extractall(script_dir)
+
+    # main 폴더 → target 폴더로 이름 변경
+    os.rename(extract_temp_folder, target_folder_path)
+
+    # zip 삭제
+    os.remove(zip_name)
+    print("완료!")
 
 # 자동 설치 함수
 def install_if_missing(package):
@@ -17,7 +49,7 @@ required_packages = [
 
 for pkg in required_packages:
     install_if_missing(pkg)
-
+auto_download_repo()
 # 이후 원래 코드
 import pygame, numpy
 import csv, random, math, time, os
@@ -27,8 +59,8 @@ WIDTH, HEIGHT = 1000, 700
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("포켓몬 2인용 싱글배틀")
 
-base_path = os.path.dirname(os.path.abspath(__file__))
-font_path = os.path.join(base_path, "malgun.ttf")
+#base_path = os.path.dirname(os.path.abspath(__file__))+"\\1503_kwakjunhyeok"
+font_path = os.path.join(target_folder_path, "malgun.ttf")
 
 font = pygame.font.Font(font_path, 28)
 clock = pygame.time.Clock()
@@ -58,7 +90,7 @@ qoWkd_type_chart={
     "격투":{"노말":2.0,"바위":2.0,"강철":2.0,"얼음":2.0,"악":2.0,"독":0.5,"비행":0.5,"벌레":0.5,"에스퍼":0.5,"페어리":0.5}
 }
 def load_csv(filename):
-    path = os.path.join(base_path, filename)
+    path = os.path.join(target_folder_path, filename)
     with open(path, encoding="cp949") as f:
         reader = csv.DictReader(f)
         return list(reader)
@@ -182,7 +214,7 @@ def draw_ev_setting():
         draw_text(f"{name}: {ev_points[i]}", 400, y, color)
     draw_text_center(f"총합 {total}/{max_ev_total}", 500)
     draw_text_center(f"현재 입력: {input_buffer}", 550, (180,180,180))
-    draw_text_center("↑↓: 항목 이동 | ←→: ±10 | 숫자 입력 | Enter: 확정", HEIGHT-40, (180,180,180))
+    draw_text_center("↑↓: 항목 이동 | 숫자 입력 | Enter: 확정", HEIGHT-40, (180,180,180))
 
 def draw_nature_up_select():
     screen.fill((10, 40, 60))
@@ -261,7 +293,7 @@ def draw_team_preview():
 
 def draw_battle_select(team, player):
     screen.fill((30, 50, 70))
-    draw_text_center(f"{player}P 출전 포켓몬 선택 (스페이스 선택, Enter 확정)", 60)
+    draw_text_center(f"{player} 출전 포켓몬 선택 (스페이스 선택, Enter 확정)", 60)
     for i, p in enumerate(team):
         y = 150 + i*50
         if i == selected_index and i in selected_for_battle:
@@ -285,6 +317,7 @@ def draw_battle_ready():
 def another_effect(attacker, defender, move_data, hit):
     if defender.get('ability')=='황금몸':
         print(f"{defender['name']} - 황금몸")
+        print(defender)
         return defender
     if not move_data.get("probability") == "0%" and hit and not defender['ability'] == '인분':
         ran = int(move_data['probability'][:-1]) * (2 if attacker['ability'] == '하늘의은총' else 1)
@@ -855,7 +888,7 @@ while True:
                 idx = page * pokemon_per_page + selected_index
                 if idx < len(pokemon_data):
                     selected_pokemon = pokemon_data[idx]
-                    iv_points = [0, 0, 0, 0, 0, 0]
+                    iv_points = [31, 31, 31, 31, 31, 31]
                     iv_index = 0
                     input_buffer = ""
                     state = "iv_setting"
@@ -899,11 +932,6 @@ while True:
                 ev_index = (ev_index + 1) % 6
             elif event.key == pygame.K_UP:
                 ev_index = (ev_index - 1) % 6
-            elif event.key == pygame.K_RIGHT:
-                if total < max_ev_total and ev_points[ev_index] < 252:
-                    ev_points[ev_index] = min(252, ev_points[ev_index] + 10)
-            elif event.key == pygame.K_LEFT:
-                ev_points[ev_index] = max(0, ev_points[ev_index] - 10)
             elif event.key == pygame.K_RETURN:
                 if input_buffer:
                     try:
@@ -1173,7 +1201,7 @@ while True:
                     print(f"발밑이 안개로 자욱해졌다!")
                     field = 'Mist'
                     weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='위협':
+                elif p1_team[p1_current_pokemon_id]['ability']=='위협' and not p2_team[p2_current_pokemon_id]['ability']=='황금몸':
                     print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
                     p2_team[p2_current_pokemon_id]['rank'][0]-=1
 
@@ -1227,7 +1255,7 @@ while True:
                     print(f"발밑이 안개로 자욱해졌다!")
                     field = 'Mist'
                     weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='위협':
+                elif p2_team[p2_current_pokemon_id]['ability']=='위협' and not p1_team[p1_current_pokemon_id]['ability']=='황금몸':
                     print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
                     p1_team[p1_current_pokemon_id]['rank'][0]-=1
             else:
@@ -1281,7 +1309,7 @@ while True:
                     print(f"발밑이 안개로 자욱해졌다!")
                     field = 'Mist'
                     weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='위협':
+                elif p2_team[p2_current_pokemon_id]['ability']=='위협' and not p1_team[p1_current_pokemon_id]['ability']=='황금몸':
                     print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
                     p1_team[p1_current_pokemon_id]['rank'][0]-=1
 
@@ -1335,7 +1363,7 @@ while True:
                     print(f"발밑이 안개로 자욱해졌다!")
                     field = 'Mist'
                     weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='위협':
+                elif p1_team[p1_current_pokemon_id]['ability']=='위협' and not p2_team[p2_current_pokemon_id]['ability']=='황금몸':
                     print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
                     p2_team[p2_current_pokemon_id]['rank'][0]-=1
         while state == "battle_turn":
@@ -1498,7 +1526,8 @@ while True:
                             print(f"사이코필드가 {defender['name']}을(를) 지켜냈다!")
                             continue
                         print(f"{attacker['name']}의 {move_name}!")
-                        p1_team[p1_current_pokemon_id]=another_effect(p2_team[p2_current_pokemon_id], p1_team[p1_current_pokemon_id], move_data, hit)
+                        p1_team[p1_current_pokemon_id]=(
+                            another_effect(p2_team[p2_current_pokemon_id], p1_team[p1_current_pokemon_id], move_data, hit))
                         p2_team[p2_current_pokemon_id]['rank']=side_effect(p2_team[p2_current_pokemon_id], move_data, hit)
                         continue
                     else:
@@ -1553,7 +1582,7 @@ while True:
                 another_effect(p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id], defender, move_data, hit)
                 (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])['rank']=side_effect(p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id], move_data, hit)
                 if '접촉' in move_data['property'] and p1_team[p1_current_pokemon_id][
-                    'status'] == None and random.random() <= 0.3 and attacker['ability'] == '독수':
+                    'status'] == None and random.random() <= 0.3 and attacker['ability'] == '독수' and not defender['ability']=='황금몸':
                     print(f'{attacker["name"]} - 독수')
                     print(f'{defender["name"]}의 몸에 독이 퍼졌다!')
                     p1_team[p1_current_pokemon_id]['status'] = "Poison"
@@ -1741,7 +1770,6 @@ while True:
                 (p2_team[p2_current_pokemon_id] if attacker_num == 1 else p1_team[p1_current_pokemon_id])['current_status'][0] -= dmg
                 print(f"{attacker['name']}의 {move_name}!") if not move_name == "발버둥" else print(
                     f"{attacker['name']}는 발버둥을 썼다!")
-                print(dmg)
                 if type_mult == 0:
                     print("효과가 없는 것 같다...")
                 elif type_mult > 1:
@@ -1755,9 +1783,9 @@ while True:
                 else:
                     if is_crit:
                         print("급소에 맞았다!")
-                another_effect(attacker, defender, move_data, hit)
+                p2_team[p2_current_pokemon_id]=another_effect(attacker, defender, move_data, hit)
                 (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])['rank']=side_effect(p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id], move_data, hit)
-                if p2_team[p2_current_pokemon_id]["current_status"][0] if attacker_num == 1 else p1_team[p1_current_pokemon_id]['current_status'][0] <= 0:
+                if (p2_team[p2_current_pokemon_id]["current_status"][0] if attacker_num == 1 else p1_team[p1_current_pokemon_id]['current_status'][0]) <= 0:
                     (p2_team[p2_current_pokemon_id] if attacker_num == 1 else p1_team[p1_current_pokemon_id])['current_status'][0] = 0
                     print(f"{defender['name']}은(는) 기절했다!")
                 if p2_team[p2_current_pokemon_id]["current_status"][0] == 0 and p2_current < 2:
