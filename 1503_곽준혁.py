@@ -317,6 +317,7 @@ def draw_battle_ready():
 def another_effect(attacker, defender, move_data, hit):
     if defender.get('ability')=='황금몸':
         print(f"{defender['name']} - 황금몸")
+        print(defender)
         return defender
     if not move_data.get("probability") == "0%" and hit and not defender['ability'] == '인분':
         ran = int(move_data['probability'][:-1]) * (2 if attacker['ability'] == '하늘의은총' else 1)
