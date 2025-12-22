@@ -5,6 +5,9 @@ import zipfile
 import shutil
 import subprocess
 
+"""Todo
+"""
+
 script_dir = os.path.dirname(os.path.abspath(__file__))  # 이 파일이 있는 위치
 target_folder_path = os.path.join(script_dir, "1503_kwakjunhyeok")
 
@@ -60,7 +63,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("포켓몬 2인용 싱글배틀")
 
 #base_path = os.path.dirname(os.path.abspath(__file__))+"\\1503_kwakjunhyeok"
-font_path = os.path.join(target_folder_path, "malgun.ttf")
+font_path = os.path.join(target_folder_path, "malgunbd.ttf")
 
 font = pygame.font.Font(font_path, 28)
 clock = pygame.time.Clock()
@@ -94,7 +97,6 @@ def load_csv(filename):
     with open(path, encoding="cp949") as f:
         reader = csv.DictReader(f)
         return list(reader)
-
 
 pokemon_data = load_csv("pokemon_data.csv")
 moves_data = load_csv("moves.csv")
@@ -141,10 +143,10 @@ available_abilities=[]
 selected_abilities=None
 ability_index = 0
 
-available_items=["생명의구슬","달인의띠","실크스카프","목탄","신비의물방울","기적의씨",
+available_items=["X","생명의구슬","달인의띠","실크스카프","목탄","신비의물방울","기적의씨",
                  "자석","녹지않는얼음","검은띠","독바늘","부드러운모래","예리한부리","휘어진스푼",
                  "은빛가루","딱딱한돌","저주의부적","용의이빨","검은안경","금속코트","요정의깃털",
-                 "노말주얼","룸서비스",
+                 "룸서비스","구애머리띠","구애스카프","구애안경",
                  "방진고글","빛의점토","차가운바위","보송보송바위",
                  "뜨거운바위","축축한바위","그라운드코트"
                  ]
@@ -285,10 +287,10 @@ def draw_team_preview():
     draw_text_center("⚔️ 팀 미리보기 ⚔️", 60)
     draw_text("1P 팀:", 200, 150, (255,255,0))
     for i, p in enumerate(team_1):
-        draw_text(f"{p['name']}", 220, 200 + i*40, (255,255,255))
+        draw_text(f"{''.join(list(p['name'])[3:])}", 220, 200 + i*40, (255,255,255))
     draw_text("2P 팀:", 600, 150, (0,255,255))
     for i, p in enumerate(team_2):
-        draw_text(f"{p['name']}", 620, 200 + i*40, (255,255,255))
+        draw_text(f"{''.join(list(p['name'])[3:])}", 620, 200 + i*40, (255,255,255))
     draw_text_center("Enter: 출전 포켓몬 선택으로 이동", HEIGHT-60, (180,180,180))
 
 def draw_battle_select(team, player):
@@ -304,7 +306,7 @@ def draw_battle_select(team, player):
             color = (0,255,0)
         else:
             color = (255,255,255)
-        draw_text(f"{i+1}. {p['name']}", 400, y, color)
+        draw_text(f"{i+1}. {''.join(list(p['name'])[3:])}", 400, y, color)
     draw_text_center(f"{len(selected_for_battle)}/3 선택됨", HEIGHT-100, (180,180,180))
     draw_text_center("↑↓: 이동 | 스페이스: 선택/해제 | Enter: 확정", HEIGHT-60, (180,180,180))
 
@@ -314,7 +316,8 @@ def draw_battle_ready():
     draw_text_center("전투 준비 완료!", HEIGHT//2 + 20)
     draw_text_center("Enter로 전투 시작", HEIGHT//2 + 80, (200,200,200))
 
-def another_effect(attacker, defender, move_data, hit):
+def another_effect(attacker, defender, move_data, hit,weather):
+    flag=0
     if defender.get('ability')=='황금몸':
         print(f"{defender['name']} - 황금몸")
         print(defender)
@@ -326,10 +329,11 @@ def another_effect(attacker, defender, move_data, hit):
     if int(move_data["eAup"]) and random.random() < ran / 100 and not (
             attacker['ability'] == '우격다짐' and int(move_data['eAup']) < 0):
         defender["rank"][0] = int(numpy.median([-6, 6, defender["rank"][0] + int(move_data["eAup"])]))
+        flag=1
         if defender["rank"][0] == 6:
-            print(f"하지만 {defender['name']}의 공격은 더이상 오르지 않는다!")
+            print(f"하지만 {defender['name']}의 공격은 더 이상 오르지 않는다!")
         elif defender["rank"][0] == -6:
-            print(f"하지만 {defender['name']}의 공격은 더이상 떨어지지 않는다!")
+            print(f"하지만 {defender['name']}의 공격은 더 이상 떨어지지 않는다!")
         elif int(move_data["eAup"]) == 1:
             print(f"{defender['name']}의 공격이 올라갔다!")
         elif int(move_data['eAup']) == 2:
@@ -345,10 +349,11 @@ def another_effect(attacker, defender, move_data, hit):
     if int(move_data["eBup"]) and random.random() < ran / 100 and not (
             attacker['ability'] == '우격다짐' and int(move_data['eBup']) < 0):
         defender["rank"][1] = int(numpy.median([-6, 6, defender["rank"][1] + int(move_data["eBup"])]))
+        flag=1
         if defender["rank"][1] == 6:
-            print(f"하지만 {defender['name']}의 방어는 더이상 오르지 않는다!")
+            print(f"하지만 {defender['name']}의 방어는 더 이상 오르지 않는다!")
         elif defender["rank"][1] == -6:
-            print(f"하지만 {defender['name']}의 방어는 더이상 떨어지지 않는다!")
+            print(f"하지만 {defender['name']}의 방어는 더 이상 떨어지지 않는다!")
         elif int(move_data["eBup"]) == 1:
             print(f"{defender['name']}의 방어가 올라갔다!")
         elif int(move_data['eBup']) == 2:
@@ -364,10 +369,11 @@ def another_effect(attacker, defender, move_data, hit):
     if int(move_data["eCup"]) and random.random() < ran / 100 and not (
             attacker['ability'] == '우격다짐' and int(move_data['eCup']) < 0):
         defender["rank"][2] = int(numpy.median([-6, 6, defender["rank"][2] + int(move_data["eCup"])]))
+        flag=1
         if defender["rank"][2] == 6:
-            print(f"하지만 {defender['name']}의 특수공격은 더이상 오르지 않는다!")
+            print(f"하지만 {defender['name']}의 특수공격은 더 이상 오르지 않는다!")
         elif defender["rank"][2] == -6:
-            print(f"하지만 {defender['name']}의 특수공격은 더이상 떨어지지 않는다!")
+            print(f"하지만 {defender['name']}의 특수공격은 더 이상 떨어지지 않는다!")
         elif int(move_data["eCup"]) == 1:
             print(f"{defender['name']}의 특수공격이 올라갔다!")
         elif int(move_data['eCup']) == 2:
@@ -383,10 +389,11 @@ def another_effect(attacker, defender, move_data, hit):
     if int(move_data["eDup"]) and random.random() < ran / 100 and not (
             attacker['ability'] == '우격다짐' and int(move_data['eDup']) < 0):
         defender["rank"][3] = int(numpy.median([-6, 6, defender["rank"][3] + int(move_data["eDup"])]))
+        flag=1
         if defender["rank"][3] == 6:
-            print(f"하지만 {defender['name']}의 특수방어는 더이상 오르지 않는다!")
+            print(f"하지만 {defender['name']}의 특수방어는 더 이상 오르지 않는다!")
         elif defender["rank"][3] == -6:
-            print(f"하지만 {defender['name']}의 특수방어는 더이상 떨어지지 않는다!")
+            print(f"하지만 {defender['name']}의 특수방어는 더 이상 떨어지지 않는다!")
         elif int(move_data["eDup"]) == 1:
             print(f"{defender['name']}의 특수방어가 올라갔다!")
         elif int(move_data['eDup']) == 2:
@@ -402,10 +409,11 @@ def another_effect(attacker, defender, move_data, hit):
     if int(move_data["eSup"]) and random.random() < ran / 100 and not (
             attacker['ability'] == '우격다짐' and int(move_data['eEup']) < 0):
         defender["rank"][4] = int(numpy.median([-6, 6, defender["rank"][4] + int(move_data["eSup"])]))
+        flag=1
         if defender["rank"][4] == 6:
-            print(f"하지만 {defender['name']}의 스피드는 더이상 오르지 않는다!")
+            print(f"하지만 {defender['name']}의 스피드는 더 이상 오르지 않는다!")
         elif defender["rank"][4] == -6:
-            print(f"하지만 {defender['name']}의 스피드는 더이상 떨어지지 않는다!")
+            print(f"하지만 {defender['name']}의 스피드는 더 이상 떨어지지 않는다!")
         elif int(move_data["eSup"]) == 1:
             print(f"{defender['name']}의 스피드가 올라갔다!")
         elif int(move_data['eSup']) == 2:
@@ -418,7 +426,29 @@ def another_effect(attacker, defender, move_data, hit):
             print(f"{defender['name']}의 스피드가 크게 떨어졌다!")
         elif int(move_data['eSup']) == -3:
             print(f"{defender['name']}의 스피드가 매우 크게 떨어졌다!")
+    if defender["ability"]=='승기' and flag:
+        print(f"{defender['name']} - 승기")
+        if defender["rank"][2] == 6:
+            print(f"하지만 {defender['name']}의 특수공격은 더 이상 오르지 않는다!")
+        else:
+            defender["rank"][2] = int(numpy.median([-6, 6, defender["rank"][2] + 2]))
+            print(f"{defender['name']}의 특수공격이 크게 올라갔다!")
+
     if field=="Mist" and not(('비행' in defender["type"] or defender['ability']=='부유') and not gravity):
+        return defender
+    if (weather=='Sun'
+            and (int(move_data["Flinch"])
+                 or int(move_data["Confusion"])
+                 or int(move_data["Binding"])
+                 or int(move_data["Freeze"])
+                 or int(move_data['Sleep'])
+                 or int(move_data['Paralysis'])
+                 or int(move_data['Burn'])
+                 or int(move_data['Poison'])
+                 or int(move_data['SPoison']))
+            and defender['ability']=='리프가드'):
+        print(f'{defender["name"]} - 리프가드')
+        print(f'{defender["name"]}은(는) 상태 이상에 걸리지 않는다!')
         return defender
     if (int(move_data["Flinch"]) and random.random() < ran / 100 and not defender["ability"] == "정신력"
             and not defender["ability"] == "인분" and not attacker['ability'] == '우격다짐'):
@@ -481,9 +511,9 @@ def side_effect(attacker, move_data, hit):
     if int(move_data['Aup']) and not (attacker['ability'] == '우격다짐' and int(move_data['Aup']) > 0):
         attacker['rank'][0] = int(numpy.median([attacker['rank'][0] + int(move_data['Aup']), -6, 6]))
         if attacker["rank"][0] == 6:
-            print(f"하지만 {attacker['name']}의 공격은 더이상 오르지 않는다!")
+            print(f"하지만 {attacker['name']}의 공격은 더 이상 오르지 않는다!")
         elif attacker["rank"][0] == -6:
-            print(f"하지만 {attacker['name']}의 공격은 더이상 떨어지지 않는다!")
+            print(f"하지만 {attacker['name']}의 공격은 더 이상 떨어지지 않는다!")
         elif int(move_data["Aup"]) == 1:
             print(f"{attacker['name']}의 공격이 올라갔다!")
         elif int(move_data['Aup']) == 2:
@@ -499,9 +529,9 @@ def side_effect(attacker, move_data, hit):
     if int(move_data['Bup']) and not (attacker['ability'] == '우격다짐' and int(move_data['Bup']) > 0):
         attacker['rank'][1] = int(numpy.median([attacker['rank'][1] + int(move_data['Bup']), -6, 6]))
         if attacker["rank"][1] == 6:
-            print(f"하지만 {attacker['name']}의 방어는 더이상 오르지 않는다!")
+            print(f"하지만 {attacker['name']}의 방어는 더 이상 오르지 않는다!")
         elif attacker["rank"][1] == -6:
-            print(f"하지만 {attacker['name']}의 방어는 더이상 떨어지지 않는다!")
+            print(f"하지만 {attacker['name']}의 방어는 더 이상 떨어지지 않는다!")
         elif int(move_data["Bup"]) == 1:
             print(f"{attacker['name']}의 방어가 올라갔다!")
         elif int(move_data['Bup']) == 2:
@@ -517,9 +547,9 @@ def side_effect(attacker, move_data, hit):
     if int(move_data['Cup']) and not (attacker['ability'] == '우격다짐' and int(move_data['Cup']) > 0):
         attacker['rank'][2] = int(numpy.median([attacker['rank'][2] + int(move_data['Cup']), -6, 6]))
         if attacker["rank"][2] == 6:
-            print(f"하지만 {attacker['name']}의 특수공격은 더이상 오르지 않는다!")
+            print(f"하지만 {attacker['name']}의 특수공격은 더 이상 오르지 않는다!")
         elif attacker["rank"][2] == -6:
-            print(f"하지만 {attacker['name']}의 특수공격은 더이상 떨어지지 않는다!")
+            print(f"하지만 {attacker['name']}의 특수공격은 더 이상 떨어지지 않는다!")
         elif int(move_data["Cup"]) == 1:
             print(f"{attacker['name']}의 특수공격이 올라갔다!")
         elif int(move_data['Cup']) == 2:
@@ -535,9 +565,9 @@ def side_effect(attacker, move_data, hit):
     if int(move_data['Dup']) and not (attacker['ability'] == '우격다짐' and int(move_data['Dup']) > 0):
         attacker['rank'][3] = int(numpy.median([attacker['rank'][3] + int(move_data['Dup']), -6, 6]))
         if attacker["rank"][3] == 6:
-            print(f"하지만 {attacker['name']}의 특수방어는 더이상 오르지 않는다!")
+            print(f"하지만 {attacker['name']}의 특수방어는 더 이상 오르지 않는다!")
         elif attacker["rank"][3] == -6:
-            print(f"하지만 {attacker['name']}의 특수방어는 더이상 떨어지지 않는다!")
+            print(f"하지만 {attacker['name']}의 특수방어는 더 이상 떨어지지 않는다!")
         elif int(move_data["Dup"]) == 1:
             print(f"{attacker['name']}의 특수방어가 올라갔다!")
         elif int(move_data['Dup']) == 2:
@@ -553,9 +583,9 @@ def side_effect(attacker, move_data, hit):
     if int(move_data['Sup']) and not (attacker['ability'] == '우격다짐' and int(move_data['Sup']) > 0):
         attacker['rank'][4] = int(numpy.median([attacker['rank'][4] + int(move_data['Sup']), -6, 6]))
         if attacker["rank"][4] == 6:
-            print(f"하지만 {attacker['name']}의 스피드는 더이상 오르지 않는다!")
+            print(f"하지만 {attacker['name']}의 스피드는 더 이상 오르지 않는다!")
         elif attacker["rank"][4] == -6:
-            print(f"하지만 {attacker['name']}의 스피드는 더이상 떨어지지 않는다!")
+            print(f"하지만 {attacker['name']}의 스피드는 더 이상 떨어지지 않는다!")
         elif int(move_data["Sup"]) == 1:
             print(f"{attacker['name']}의 스피드가 올라갔다!")
         elif int(move_data['Sup']) == 2:
@@ -574,12 +604,12 @@ def draw_battle_screen(p1_pokemon, p2_pokemon, p1_hp, p2_hp):
     screen.fill((20, 20, 40))
     draw_text_center("⚔️ BATTLE START ⚔️", 40, (255, 255, 255))
 
-    draw_text(f"1P: {p1_pokemon['name']}", 100, 150, (255, 255, 0))
+    draw_text(f"1P: {''.join(list(p1_pokemon['name'])[3:])}", 100, 150, (255, 255, 0))
     pygame.draw.rect(screen, (255, 0, 0), (100, 180, 200, 20))
     pygame.draw.rect(screen, (0, 255, 0), (100, 180, int(200 * p1_hp / p1_pokemon['max_status'][0]), 20))
     draw_text(f"HP: {p1_hp}/{p1_pokemon['max_status'][0]}", 100, 210, (255, 255, 255))
 
-    draw_text(f"2P: {p2_pokemon['name']}", 500, 50, (0, 200, 255))
+    draw_text(f"2P: {''.join(list(p2_pokemon['name'])[3:])}", 500, 50, (0, 200, 255))
     pygame.draw.rect(screen, (255, 0, 0), (500, 80, 200, 20))
     pygame.draw.rect(screen, (0, 255, 0), (500, 80, int(200 * p2_hp / p2_pokemon['max_status'][0]), 20))
     draw_text(f"HP: {p2_hp}/{p2_pokemon['max_status'][0]}", 500, 110, (255, 255, 255))
@@ -611,16 +641,23 @@ def calculate_damage(attacker, defender, move_data, weather=None, reflect=False,
     :param wonder_room:
     :return: tuple(damage, hit, type_mult, is_crit, par_flag, flinch_flag,except_flag)
     """
+    if attacker.get('ability')=='원격':
+        for i in range(len(move_data['property'])):
+            if move_data['property'][i]=='접촉':
+                move_data['property'][i] = '비접촉'
+    if attacker.get('ability')=='촉촉보이스' and "소리" in move_data['property']:
+        move_data['type'] = '물'
     par_flag,flinch_flag,except_flag=0,0,0
     if defender.get('ability')=='저수' and move_data['type']=='물':
         print(f"{defender['name']} - 저수")
         print(f"{defender['name']}은(는) 체력을 회복했다!")
         hit=0
         except_flag=1
-        return 0-defender['max_status']//4, hit, 0, 0, par_flag, flinch_flag,except_flag
-    if (random.random() < int(move_data["accuracy"]) / 100 * (
+        dmg=(0-defender['max_status'][0]//4 if defender['max_status'][0]>defender['current_status'][0]+defender['max_status'][0] else defender['current_status']-defender['max_status'][0])
+        return dmg, hit, 0, 0, par_flag, flinch_flag,except_flag
+    if (random.random() < int(move_data["accuracy"]) / 100 * ((
             (3 + max(0, int(numpy.median([-6, 6, attacker["rank"][5] - defender["rank"][6]])))) / (
-            3 - min(0, int(numpy.median([-6, 6, attacker["rank"][5] - defender["rank"][6]]))))) or
+            3 - min(0, int(numpy.median([-6, 6, attacker["rank"][5] - defender["rank"][6]]))))) if not attacker.get('ability')=='천진' else 1) or
             int(move_data['accuracy'])==-1):
         hit = 1
     else:
@@ -661,6 +698,7 @@ def calculate_damage(attacker, defender, move_data, weather=None, reflect=False,
     def_stat = defender["current_status"][def_index]
 
     power_mod = 1.0
+    if attacker.get("ability")=="타오르는불꽃" and attacker.get("ability_flag") and move_data.get("type")=="불꽃":power_mod *= 1.5
     if attacker.get("ability") == "이판사판" and not move_data.get("rebound") == 0: power_mod *= 1.2
     if attacker.get("ability") == "심록" and attacker.get("current_status")[0] * 3 <= attacker.get("max_status")[
         0] and move_data.get("type") == "풀": power_mod *= 1.5
@@ -694,14 +732,18 @@ def calculate_damage(attacker, defender, move_data, weather=None, reflect=False,
     if attacker.get('ability')=='일렉트릭스킨' and move_type == '노말':power_mod *= 1.2; move_type='전기'
     if attacker.get('ability')=='노말스킨':power_mod *= 1.2;move_type='노말'
     if move_data.get('name')=='객기' and not attacker.get('status') == None: power_mod *= 2.0
+    if move_data.get('name')=='탁쳐서떨구기' and not defender.get('item') == None: power_mod *= 1.5
 
     atk_mod = 1.0
     def_mod = 1.0
-    atk_mod *= (2 + max(0, attacker["rank"][atk_index - 1])) / (2 - min(0, attacker["rank"][atk_index - 1]))
+    atk_mod *= ((2 + max(0, attacker["rank"][atk_index - 1])) / (2 - min(0, attacker["rank"][atk_index - 1])) if attacker.get('ability')=='천진' or defender.get('ability')=='천진' else 1)
     if (attacker.get('ability') == '진홍빛고동') and weather == 'Sun' and atk_index==1: atk_mod*=1.3
     if (attacker.get('ability') == '하드론엔진') and field=='Electric' and atk_index==3: atk_mod*=1.3
     if attacker.get('ability')=='근성' and not attacker.get('status')==None: atk_mod*=1.5
-    def_mod *= (2 + max(0, defender["rank"][def_index - 1])) / (2 - min(0, defender["rank"][def_index - 1]))
+    if attacker.get('ability')=='선파워' and weather == 'Sun' and atk_index==3: atk_mod*=1.5
+    if attacker.get('item')=='구애머리띠' and atk_index==1:atk_mod*=1.5
+    if attacker.get('item') == '구애안경' and atk_index == 3: atk_mod *= 1.5
+    def_mod *= ((2 + max(0, defender["rank"][def_index - 1])) / (2 - min(0, defender["rank"][def_index - 1])) if attacker.get('ability')=='천진' or defender.get('ability')=='천진' else 1)
     atk_final = int(atk_stat * atk_mod)
     def_final = int(def_stat * def_mod)
 
@@ -786,7 +828,8 @@ def calculate_damage(attacker, defender, move_data, weather=None, reflect=False,
     if attacker.get('item') == '검은안경' and move_data['type'] == '악': mod2 *= 1.2
     if attacker.get('item') == '금속코트' and move_data['type'] == '강철': mod2 *= 1.2
     if attacker.get('item') == '요정의깃털' and move_data['type'] == '페어리': mod2 *= 1.2
-    if attacker.get('item')[-2:]=='주얼' and attacker.get('item')[:-2]==move_data['type']: mod2 *= 1.3
+    if not attacker.get('item') == None:
+        if attacker.get('item')[-2:]=='주얼' and attacker.get('item')[:-2]==move_data['type']: mod2 *= 1.3
     mod3 = 1.0
     if defender.get("ability") == "필터" and type_mult > 1: mod3 *= 0.75
     if defender.get("ability") == '하드록' and type_mult > 1: mod3 *= 0.75
@@ -832,7 +875,7 @@ def choose_pokemon(player_num, team, current_pokemon_id):
         screen.fill((0, 0, 0))
         draw_text_center(f"{player_num}P: 무슨 포켓몬으로 교체하시겠습니까? (1~3)", 200)
         for i, pokemon in enumerate(team):
-            draw_text_center(f"{i + 1}. {pokemon['name']}", 260 + i * 40,(255,255,255) if not pokemon['current_status'][0]==0 else (255,0,0))
+            draw_text_center(f"{i + 1}. {''.join(list(pokemon['name'])[3:])}", 260 + i * 40,(255,255,255) if not pokemon['current_status'][0]==0 else (255,0,0))
         pygame.display.flip()
 
         for event in pygame.event.get():
@@ -1035,7 +1078,7 @@ while True:
             elif event.key == pygame.K_ESCAPE:
                 state="move_select"
             elif event.key == pygame.K_RETURN:
-                selected_item = available_items[item_index]
+                selected_item = available_items[item_index] if not item_index == 0 else None
                 state="ability_select"
                 ability_names = selected_pokemon["ability"].split(",")
                 available_ability = [m.strip() for m in ability_names if m.strip()]
@@ -1053,7 +1096,8 @@ while True:
                 selected_ability = available_ability[ability_index]
                 chosen_data = {
                     "type": [selected_pokemon["type1"]]if selected_pokemon["type2"] == "" else [selected_pokemon["type1"],selected_pokemon["type2"]],
-                    "name": selected_pokemon["name"],
+                    "Atype":[selected_pokemon["type1"]]if selected_pokemon["type2"] == "" else [selected_pokemon["type1"],selected_pokemon["type2"]],
+                    "name": f"{'P1)' if current_player==1 else 'P2)'}"+selected_pokemon["name"],
                     "ivs": iv_points.copy(),
                     "evs": ev_points.copy(),
                     "moves": selected_moves.copy(),
@@ -1079,7 +1123,10 @@ while True:
                     "SPoison_cnt":1,
                     "PP":selected_moves_PP.copy(),
                     "turn":0,"protect":False,
-                    "next_move":None
+                    "next_move":None,
+                    "ability_flag":False,
+                    "skill_bind":None,
+                    "skill_bind_turn":0
                 }
                 if current_player == 1:
                     team_1.append(chosen_data)
@@ -1153,234 +1200,362 @@ while True:
             wonder_room_timer=0
             gravity=False
             gravity_timer=0
+            p1_spike=0
+            p2_spike=0
+            p1_Pspike=0
+            p2_Pspike=0
+            p1_srock=0
+            p2_srock=0
+            p1_web=0
+            p2_web=0
             draw_battle_screen(p1_team[p1_current_pokemon_id], p2_team[p2_current_pokemon_id], p1_team[p1_current_pokemon_id]['current_status'][0], p2_team[p2_current_pokemon_id]["current_status"][0])
-            p1_speed = p1_team[p1_current_pokemon_id]["current_status"][5] * (
-                        2 + max(p1_team[p1_current_pokemon_id]["rank"][4], 0)) / (
-                               2 - min(p1_team[p1_current_pokemon_id]["rank"][4], 0)) * (
-                           0.5 if p1_team[p1_current_pokemon_id]["status"] == "Paralysis" else 1)
-            p2_speed = p2_team[p2_current_pokemon_id]["current_status"][5] * (
-                        2 + max(p2_team[p2_current_pokemon_id]["rank"][4], 0)) / (
-                               2 - min(p2_team[p2_current_pokemon_id]["rank"][4], 0)) * (
-                           0.5 if p2_team[p2_current_pokemon_id]["status"] == "Paralysis" else 1)
-            if p1_speed > p2_speed:
-                if p1_team[p1_current_pokemon_id]['ability'] == '가뭄':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"햇살이 강해졌다!")
-                    weather = 'Sun'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "뜨거운바위" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability'] == '진홍빛고동':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"코라이돈은 햇살을 강하게 하여 고대의 고동을 폭발시켰다!!")
-                    weather = 'Sun'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "뜨거운바위" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='잔비':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"비가 내리기 시작했다!")
-                    weather = 'Rain'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "축축한바위" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='모래날림':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"모래바람이 불기 시작했다!")
-                    weather = 'SandStorm'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "보송보송바위" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='눈퍼뜨리기':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"눈이 내리기 시작했다!")
-                    weather = 'Snow'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "차가운바위" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='일렉트릭메이커':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"발밑에 전기가 떠돌기 시작했다!")
-                    field = 'Electric'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='하드론엔진':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"미라이돈은 일렉트릭필드를 전개하여 미래 기관을 가동했다!!")
-                    field = 'Electric'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='사이코메이커':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"발밑에서 이상한 느낌이 든다!")
-                    field = 'Psyco'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='그래스메이커':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"발밑에 풀이 무성해졌다!")
-                    field = 'Grass'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='미스트메이커':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"발밑이 안개로 자욱해졌다!")
-                    field = 'Mist'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='위협' and not p2_team[p2_current_pokemon_id]['ability']=='황금몸':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    p2_team[p2_current_pokemon_id]['rank'][0]-=1
 
-                if p2_team[p2_current_pokemon_id]['ability'] == '가뭄':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"햇살이 강해졌다!")
-                    weather = 'Sun'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "뜨거운바위" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability'] == '진홍빛고동':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"코라이돈은 햇살을 강하게 하여 고대의 고동을 폭발시켰다!!")
-                    weather = 'Sun'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "뜨거운바위" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='잔비':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"비가 내리기 시작했다!")
-                    weather = 'Rain'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "축축한바위" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='모래날림':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"모래바람이 불기 시작했다!")
-                    weather = 'SandStorm'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "보송보송바위" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='눈퍼뜨리기':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"눈이 내리기 시작했다!")
-                    weather = 'Snow'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "차가운바위" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='일렉트릭메이커':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"발밑에 전기가 떠돌기 시작했다!")
-                    field = 'Electric'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='하드론엔진':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"미라이돈은 일렉트릭필드를 전개하여 미래 기관을 가동했다!!")
-                    field = 'Electric'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='사이코메이커':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"발밑에서 이상한 느낌이 든다!")
-                    field = 'Psyco'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='그래스메이커':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"발밑에 풀이 무성해졌다!")
-                    field = 'Grass'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='미스트메이커':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"발밑이 안개로 자욱해졌다!")
-                    field = 'Mist'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='위협' and not p1_team[p1_current_pokemon_id]['ability']=='황금몸':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    p1_team[p1_current_pokemon_id]['rank'][0]-=1
-            else:
-                if p2_team[p2_current_pokemon_id]['ability'] == '가뭄':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"햇살이 강해졌다!")
-                    weather = 'Sun'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "뜨거운바위" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability'] == '진홍빛고동':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"코라이돈은 햇살을 강하게 하여 고대의 고동을 폭발시켰다!!")
-                    weather = 'Sun'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "뜨거운바위" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='잔비':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"비가 내리기 시작했다!")
-                    weather = 'Rain'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "축축한바위" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='모래날림':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"모래바람이 불기 시작했다!")
-                    weather = 'SandStorm'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "보송보송바위" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='눈퍼뜨리기':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"눈이 내리기 시작했다!")
-                    weather = 'Snow'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "차가운바위" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='일렉트릭메이커':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"발밑에 전기가 떠돌기 시작했다!")
-                    field = 'Electric'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='하드론엔진':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"미라이돈은 일렉트릭필드를 전개하여 미래 기관을 가동했다!!")
-                    field = 'Electric'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='사이코메이커':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"발밑에서 이상한 느낌이 든다!")
-                    field = 'Psyco'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='그래스메이커':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"발밑에 풀이 무성해졌다!")
-                    field = 'Grass'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='미스트메이커':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    print(f"발밑이 안개로 자욱해졌다!")
-                    field = 'Mist'
-                    weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p2_team[p2_current_pokemon_id]['ability']=='위협' and not p1_team[p1_current_pokemon_id]['ability']=='황금몸':
-                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
-                    p1_team[p1_current_pokemon_id]['rank'][0]-=1
 
-                if p1_team[p1_current_pokemon_id]['ability'] == '가뭄':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"햇살이 강해졌다!")
-                    weather = 'Sun'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "뜨거운바위" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability'] == '진홍빛고동':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"코라이돈은 햇살을 강하게 하여 고대의 고동을 폭발시켰다!!")
-                    weather = 'Sun'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "뜨거운바위" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='잔비':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"비가 내리기 시작했다!")
-                    weather = 'Rain'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "축축한바위" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='모래날림':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"모래바람이 불기 시작했다!")
-                    weather = 'SandStorm'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "보송보송바위" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='눈퍼뜨리기':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"눈이 내리기 시작했다!")
-                    weather = 'Snow'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "차가운바위" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='일렉트릭메이커':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"발밑에 전기가 떠돌기 시작했다!")
-                    field = 'Electric'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='하드론엔진':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"미라이돈은 일렉트릭필드를 전개하여 미래 기관을 가동했다!!")
-                    field = 'Electric'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='사이코메이커':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"발밑에서 이상한 느낌이 든다!")
-                    field = 'Psyco'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='그래스메이커':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"발밑에 풀이 무성해졌다!")
-                    field = 'Grass'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='미스트메이커':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    print(f"발밑이 안개로 자욱해졌다!")
-                    field = 'Mist'
-                    weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
-                elif p1_team[p1_current_pokemon_id]['ability']=='위협' and not p2_team[p2_current_pokemon_id]['ability']=='황금몸':
-                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
-                    p2_team[p2_current_pokemon_id]['rank'][0]-=1
         while state == "battle_turn":
             p1_team[p1_current_pokemon_id]['Flinch']=0
             p2_team[p2_current_pokemon_id]['Flinch']=0
+            p1_speed = p1_team[p1_current_pokemon_id]["current_status"][5] * (
+                    2 + max(p1_team[p1_current_pokemon_id]["rank"][4], 0)) / (
+                               2 - min(p1_team[p1_current_pokemon_id]["rank"][4], 0)) * (
+                           0.5 if p1_team[p1_current_pokemon_id]["status"] == "Paralysis" else 1) * (
+                           1.5 if p1_team[p1_current_pokemon_id]['item'] == '구애스카프' else 1)
+            p2_speed = p2_team[p2_current_pokemon_id]["current_status"][5] * (
+                    2 + max(p2_team[p2_current_pokemon_id]["rank"][4], 0)) / (
+                               2 - min(p2_team[p2_current_pokemon_id]["rank"][4], 0)) * (
+                           0.5 if p2_team[p2_current_pokemon_id]["status"] == "Paralysis" else 1) * (
+                           1.5 if p2_team[p2_current_pokemon_id]['item'] == '구애스카프' else 1)
+            if p1_speed > p2_speed:
+                if p1_team[p1_current_pokemon_id]['turn']==0:
+                    if p1_team[p1_current_pokemon_id]['ability'] == '가뭄':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"햇살이 강해졌다!")
+                        weather = 'Sun'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "뜨거운바위" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '진홍빛고동':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"코라이돈은 햇살을 강하게 하여 고대의 고동을 폭발시켰다!!")
+                        weather = 'Sun'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "뜨거운바위" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '잔비':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"비가 내리기 시작했다!")
+                        weather = 'Rain'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "축축한바위" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '모래날림':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"모래바람이 불기 시작했다!")
+                        weather = 'SandStorm'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "보송보송바위" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '눈퍼뜨리기':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"눈이 내리기 시작했다!")
+                        weather = 'Snow'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "차가운바위" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '일렉트릭메이커':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"발밑에 전기가 떠돌기 시작했다!")
+                        field = 'Electric'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '하드론엔진':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"미라이돈은 일렉트릭필드를 전개하여 미래 기관을 가동했다!!")
+                        field = 'Electric'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '사이코메이커':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"발밑에서 이상한 느낌이 든다!")
+                        field = 'Psyco'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '그래스메이커':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"발밑에 풀이 무성해졌다!")
+                        field = 'Grass'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '미스트메이커':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"발밑이 안개로 자욱해졌다!")
+                        field = 'Mist'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '위협' and not p2_team[p2_current_pokemon_id][
+                                                                                       'ability'] == '황금몸':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        if p2_team[p2_current_pokemon_id]['rank'][0] == -6:
+                            print(f'{p2_team[p2_current_pokemon_id]["name"]}의 공격은 더 이상 떨어지지 않는다!')
+                        else:
+                            print(f'{p2_team[p2_current_pokemon_id]["name"]}의 공격이 떨어졌다!')
+                            p2_team[p2_current_pokemon_id]['rank'][0] = max(-6,
+                                                                            p2_team[p2_current_pokemon_id]['rank'][0] - 1)
+                            if p2_team[p2_current_pokemon_id]["ability"] == '승기':
+                                print(f"{p2_team[p2_current_pokemon_id]['name']} - 승기")
+                                if p2_team[p2_current_pokemon_id]["rank"][2] == 6:
+                                    print(f"하지만 {p2_team[p2_current_pokemon_id]['name']}의 특수공격은 더 이상 오르지 않는다!")
+                                else:
+                                    p2_team[p2_current_pokemon_id]["rank"][2] = int(
+                                        numpy.median([-6, 6, p2_team[p2_current_pokemon_id]["rank"][2] + 2]))
+                                    print(f"{p2_team[p2_current_pokemon_id]['name']}의 특수공격이 크게 올라갔다!")
+                    if p1_spike and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 압정에 의한 피해를 입었다!")
+                        p1_team[p1_current_pokemon_id]['current_status'][0]-=p1_team[p1_current_pokemon_id]['max_status'][0]//(8 if p1_spike==3 else (6 if p1_spike==2 else 4))
+                    if '독' in p1_team[p1_current_pokemon_id]['type']:
+                        p1_Pspike=0
+                    if p1_Pspike and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠' and p1_team[p1_current_pokemon_id]['ability']=='면역' and not p1_team[p1_current_pokemon_id]['status']==None:
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 독압정에 의해 독을 입었다!")
+                        p1_team[p1_current_pokemon_id]['status']=("Poison" if p1_Pspike==1 else "SPoison")
+                    if p1_web and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 끈적끈적네트에 의해 스피드가 떨어졌다!")
+                        p1_team[p1_current_pokemon_id]['rank'][5]-=1
+                    if p1_srock:
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}에게 뾰족한 바위가 박혔다!")
+                        p1_team[p1_current_pokemon_id]['current_status'][0]-=(p1_team[p1_current_pokemon_id]['max_status']//8)*type_multiplier("바위",p1_team[p1_current_pokemon_id]['type'])
+
+                if p2_team[p2_current_pokemon_id]['turn']==0:
+                    if p2_team[p2_current_pokemon_id]['ability'] == '가뭄':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"햇살이 강해졌다!")
+                        weather = 'Sun'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "뜨거운바위" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '진홍빛고동':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"코라이돈은 햇살을 강하게 하여 고대의 고동을 폭발시켰다!!")
+                        weather = 'Sun'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "뜨거운바위" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '잔비':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"비가 내리기 시작했다!")
+                        weather = 'Rain'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "축축한바위" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '모래날림':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"모래바람이 불기 시작했다!")
+                        weather = 'SandStorm'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "보송보송바위" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '눈퍼뜨리기':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"눈이 내리기 시작했다!")
+                        weather = 'Snow'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "차가운바위" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '일렉트릭메이커':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"발밑에 전기가 떠돌기 시작했다!")
+                        field = 'Electric'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '하드론엔진':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"미라이돈은 일렉트릭필드를 전개하여 미래 기관을 가동했다!!")
+                        field = 'Electric'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '사이코메이커':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"발밑에서 이상한 느낌이 든다!")
+                        field = 'Psyco'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '그래스메이커':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"발밑에 풀이 무성해졌다!")
+                        field = 'Grass'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '미스트메이커':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"발밑이 안개로 자욱해졌다!")
+                        field = 'Mist'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '위협' and not p1_team[p1_current_pokemon_id][
+                                                                                       'ability'] == '황금몸':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        if p1_team[p1_current_pokemon_id]['rank'][0] == -6:
+                            print(f'{p1_team[p1_current_pokemon_id]["name"]}의 공격은 더 이상 떨어지지 않는다!')
+                        else:
+                            print(f'{p1_team[p1_current_pokemon_id]["name"]}의 공격이 떨어졌다!')
+                            p1_team[p1_current_pokemon_id]['rank'][0] = max(-6,
+                                                                            p1_team[p1_current_pokemon_id]['rank'][0] - 1)
+                            if p1_team[p1_current_pokemon_id]["ability"] == '승기':
+                                print(f"{p1_team[p1_current_pokemon_id]['name']} - 승기")
+                                if p1_team[p1_current_pokemon_id]["rank"][2] == 6:
+                                    print(f"하지만 {p1_team[p1_current_pokemon_id]['name']}의 특수공격은 더 이상 오르지 않는다!")
+                                else:
+                                    p1_team[p1_current_pokemon_id]["rank"][2] = int(
+                                        numpy.median([-6, 6, p1_team[p1_current_pokemon_id]["rank"][2] + 2]))
+                                    print(f"{p1_team[p1_current_pokemon_id]['name']}의 특수공격이 크게 올라갔다!")
+                    if p2_spike and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 압정에 의한 피해를 입었다!")
+                        p2_team[p2_current_pokemon_id]['current_status'][0]-=p2_team[p2_current_pokemon_id]['max_status'][0]//(8 if p2_spike==3 else (6 if p2_spike==2 else 4))
+                    if '독' in p2_team[p2_current_pokemon_id]['type']:
+                        p2_Pspike=0
+                    if p2_Pspike and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠' and p2_team[p2_current_pokemon_id]['ability']=='면역' and not p2_team[p2_current_pokemon_id]['status']==None:
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 독압정에 의해 독을 입었다!")
+                        p2_team[p2_current_pokemon_id]['status']=("Poison" if p2_Pspike==1 else "SPoison")
+                    if p2_web and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 끈적끈적네트에 의해 스피드가 떨어졌다!")
+                        p2_team[p2_current_pokemon_id]['rank'][5]-=1
+                    if p2_srock:
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}에게 뾰족한 바위가 박혔다!")
+                        p2_team[p2_current_pokemon_id]['current_status'][0]-=(p2_team[p2_current_pokemon_id]['max_status']//8)*type_multiplier("바위",p2_team[p2_current_pokemon_id]['type'])
+            else:
+                if p2_team[p2_current_pokemon_id]['turn']==0:
+                    if p2_team[p2_current_pokemon_id]['ability'] == '가뭄':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"햇살이 강해졌다!")
+                        weather = 'Sun'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "뜨거운바위" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '진홍빛고동':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"코라이돈은 햇살을 강하게 하여 고대의 고동을 폭발시켰다!!")
+                        weather = 'Sun'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "뜨거운바위" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '잔비':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"비가 내리기 시작했다!")
+                        weather = 'Rain'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "축축한바위" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '모래날림':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"모래바람이 불기 시작했다!")
+                        weather = 'SandStorm'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "보송보송바위" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '눈퍼뜨리기':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"눈이 내리기 시작했다!")
+                        weather = 'Snow'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "차가운바위" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '일렉트릭메이커':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"발밑에 전기가 떠돌기 시작했다!")
+                        field = 'Electric'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '하드론엔진':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"미라이돈은 일렉트릭필드를 전개하여 미래 기관을 가동했다!!")
+                        field = 'Electric'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '사이코메이커':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"발밑에서 이상한 느낌이 든다!")
+                        field = 'Psyco'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '그래스메이커':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"발밑에 풀이 무성해졌다!")
+                        field = 'Grass'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '미스트메이커':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        print(f"발밑이 안개로 자욱해졌다!")
+                        field = 'Mist'
+                        weather_timer = (5 if not p2_team[p2_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p2_team[p2_current_pokemon_id]['ability'] == '위협' and not p1_team[p1_current_pokemon_id][
+                                                                                       'ability'] == '황금몸':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - {p2_team[p2_current_pokemon_id]["ability"]}')
+                        if p1_team[p1_current_pokemon_id]['rank'][0] == -6:
+                            print(f'{p1_team[p1_current_pokemon_id]["name"]}의 공격은 더 이상 떨어지지 않는다!')
+                        else:
+                            print(f'{p1_team[p1_current_pokemon_id]["name"]}의 공격이 떨어졌다!')
+                            p1_team[p1_current_pokemon_id]['rank'][0] = max(-6,
+                                                                            p1_team[p1_current_pokemon_id]['rank'][0] - 1)
+                            if p1_team[p1_current_pokemon_id]["ability"] == '승기':
+                                print(f"{p1_team[p1_current_pokemon_id]['name']} - 승기")
+                                if p1_team[p1_current_pokemon_id]["rank"][2] == 6:
+                                    print(f"하지만 {p1_team[p1_current_pokemon_id]['name']}의 특수공격은 더 이상 오르지 않는다!")
+                                else:
+                                    p1_team[p1_current_pokemon_id]["rank"][2] = int(
+                                        numpy.median([-6, 6, p1_team[p1_current_pokemon_id]["rank"][2] + 2]))
+                                    print(f"{p1_team[p1_current_pokemon_id]['name']}의 특수공격이 크게 올라갔다!")
+                    if p2_spike and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 압정에 의한 피해를 입었다!")
+                        p2_team[p2_current_pokemon_id]['current_status'][0]-=p2_team[p2_current_pokemon_id]['max_status'][0]//(8 if p2_spike==3 else (6 if p2_spike==2 else 4))
+                    if '독' in p2_team[p2_current_pokemon_id]['type']:
+                        p2_Pspike=0
+                    if p2_Pspike and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠' and p2_team[p2_current_pokemon_id]['ability']=='면역' and not p2_team[p2_current_pokemon_id]['status']==None:
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 독압정에 의해 독을 입었다!")
+                        p2_team[p2_current_pokemon_id]['status']=("Poison" if p2_Pspike==1 else "SPoison")
+                    if p2_web and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 끈적끈적네트에 의해 스피드가 떨어졌다!")
+                        p2_team[p2_current_pokemon_id]['rank'][5]-=1
+                    if p2_srock:
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}에게 뾰족한 바위가 박혔다!")
+                        p2_team[p2_current_pokemon_id]['current_status'][0]-=(p2_team[p2_current_pokemon_id]['max_status']//8)*type_multiplier("바위",p2_team[p2_current_pokemon_id]['type'])
+
+                if p1_team[p1_current_pokemon_id]['turn']==0:
+                    if p1_team[p1_current_pokemon_id]['ability'] == '가뭄':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"햇살이 강해졌다!")
+                        weather = 'Sun'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "뜨거운바위" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '진홍빛고동':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"코라이돈은 햇살을 강하게 하여 고대의 고동을 폭발시켰다!!")
+                        weather = 'Sun'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "뜨거운바위" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '잔비':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"비가 내리기 시작했다!")
+                        weather = 'Rain'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "축축한바위" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '모래날림':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"모래바람이 불기 시작했다!")
+                        weather = 'SandStorm'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "보송보송바위" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '눈퍼뜨리기':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"눈이 내리기 시작했다!")
+                        weather = 'Snow'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "차가운바위" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '일렉트릭메이커':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"발밑에 전기가 떠돌기 시작했다!")
+                        field = 'Electric'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '하드론엔진':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"미라이돈은 일렉트릭필드를 전개하여 미래 기관을 가동했다!!")
+                        field = 'Electric'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '사이코메이커':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"발밑에서 이상한 느낌이 든다!")
+                        field = 'Psyco'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '그래스메이커':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"발밑에 풀이 무성해졌다!")
+                        field = 'Grass'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '미스트메이커':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        print(f"발밑이 안개로 자욱해졌다!")
+                        field = 'Mist'
+                        weather_timer = (5 if not p1_team[p1_current_pokemon_id]['item'] == "그라운드코트" else 8)
+                    elif p1_team[p1_current_pokemon_id]['ability'] == '위협' and not p2_team[p2_current_pokemon_id][
+                                                                                       'ability'] == '황금몸':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - {p1_team[p1_current_pokemon_id]["ability"]}')
+                        if p2_team[p2_current_pokemon_id]['rank'][0] == -6:
+                            print(f'{p2_team[p2_current_pokemon_id]["name"]}의 공격은 더 이상 떨어지지 않는다!')
+                        else:
+                            print(f'{p2_team[p2_current_pokemon_id]["name"]}의 공격이 떨어졌다!')
+                            p2_team[p2_current_pokemon_id]['rank'][0] = max(-6,
+                                                                            p2_team[p2_current_pokemon_id]['rank'][0] - 1)
+                            if p2_team[p2_current_pokemon_id]["ability"] == '승기':
+                                print(f"{p2_team[p2_current_pokemon_id]['name']} - 승기")
+                                if p2_team[p2_current_pokemon_id]["rank"][2] == 6:
+                                    print(f"하지만 {p2_team[p2_current_pokemon_id]['name']}의 특수공격은 더 이상 오르지 않는다!")
+                                else:
+                                    p2_team[p2_current_pokemon_id]["rank"][2] = int(
+                                        numpy.median([-6, 6, p2_team[p2_current_pokemon_id]["rank"][2] + 2]))
+                                    print(f"{p2_team[p2_current_pokemon_id]['name']}의 특수공격이 크게 올라갔다!")
+                    if p1_spike and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 압정에 의한 피해를 입었다!")
+                        p1_team[p1_current_pokemon_id]['current_status'][0]-=p1_team[p1_current_pokemon_id]['max_status'][0]//(8 if p1_spike==3 else (6 if p1_spike==2 else 4))
+                    if '독' in p1_team[p1_current_pokemon_id]['type']:
+                        p1_Pspike=0
+                    if p1_Pspike and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠' and p1_team[p1_current_pokemon_id]['ability']=='면역' and not p1_team[p1_current_pokemon_id]['status']==None:
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 독압정에 의해 독을 입었다!")
+                        p1_team[p1_current_pokemon_id]['status']=("Poison" if p1_Pspike==1 else "SPoison")
+                    if p1_web and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 끈적끈적네트에 의해 스피드가 떨어졌다!")
+                        p1_team[p1_current_pokemon_id]['rank'][5]-=1
+                    if p1_srock:
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}에게 뾰족한 바위가 박혔다!")
+                        p1_team[p1_current_pokemon_id]['current_status'][0]-=(p1_team[p1_current_pokemon_id]['max_status']//8)*type_multiplier("바위",p1_team[p1_current_pokemon_id]['type'])
             p1_team[p1_current_pokemon_id]['turn'] += 1
             p2_team[p2_current_pokemon_id]['turn'] += 1
             draw_battle_screen(p1_team[p1_current_pokemon_id], p2_team[p2_current_pokemon_id], p1_team[p1_current_pokemon_id]['current_status'][0], p2_team[p2_current_pokemon_id]["current_status"][0])
@@ -1400,6 +1575,8 @@ while True:
                         move1=p1_team[p1_current_pokemon_id]['next_move']
                         p1_charge=1
                         ca=0
+                    elif not p1_team[p1_current_pokemon_id]['skill_bind'] == None:
+                        p1_move_choice = p1_team[p1_current_pokemon_id]['skill_bind']
                     elif p1_team[p1_current_pokemon_id]["PP"][0] or p1_team[p1_current_pokemon_id]["PP"][1] or p1_team[p1_current_pokemon_id]["PP"][2] or p1_team[p1_current_pokemon_id]["PP"][3]:
                         p1_move_choice, p1_choose_move_index,ca = choose_move(1, p1_team[p1_current_pokemon_id])
                     else:
@@ -1417,6 +1594,8 @@ while True:
                         move2=p2_team[p2_current_pokemon_id]['next_move']
                         p2_charge=1
                         ca=0
+                    elif not p2_team[p2_current_pokemon_id]['skill_bind'] == None:
+                        p2_move_choice = p2_team[p2_current_pokemon_id]['skill_bind']
                     elif p2_team[p2_current_pokemon_id]["PP"][0] or p2_team[p2_current_pokemon_id]["PP"][1] or p2_team[p2_current_pokemon_id]["PP"][2] or p2_team[p2_current_pokemon_id]["PP"][3]:
                         p2_move_choice,p2_choose_move_index,ca = choose_move(2, p2_team[p2_current_pokemon_id])
                     else:
@@ -1425,39 +1604,253 @@ while True:
                     move2 = find_move(p2_move_choice)
             if p1_action=="교체" and p2_action=='교체':
                 if trick_room:
-                    p2_speed = p1_team[p1_current_pokemon_id]["current_status"][5] * (2 + max(p1_team[p1_current_pokemon_id]["rank"][4],0)) / (
-                                2 - min(p1_team[p1_current_pokemon_id]["rank"][4],0)) * (0.5 if p1_team[p1_current_pokemon_id]["status"] == "Paralysis" else 1)
-                    p1_speed = p2_team[p2_current_pokemon_id]["current_status"][5] * (2 + max(p2_team[p2_current_pokemon_id]["rank"][4],0)) / (
-                                2 - min(p2_team[p2_current_pokemon_id]["rank"][4],0)) * (0.5 if p2_team[p2_current_pokemon_id]["status"] == "Paralysis" else 1)
+                    p2_speed = p1_team[p1_current_pokemon_id]["current_status"][5] * (
+                            2 + max(p1_team[p1_current_pokemon_id]["rank"][4], 0)) / (
+                                       2 - min(p1_team[p1_current_pokemon_id]["rank"][4], 0)) * (
+                                   0.5 if p1_team[p1_current_pokemon_id]["status"] == "Paralysis" else 1) * (
+                                   1.5 if p2_team[p2_current_pokemon_id]['ability'] == '고대활성' and
+                                          p2_team[p2_current_pokemon_id]['max_status'][1:6].index(
+                                              max(p2_team[p2_current_pokemon_id]['max_status'][1:6])) == 5 and
+                                          weather == 'Sun' else 1) * (
+                                   2 if p1_team[p1_current_pokemon_id]['ability'] == '엽록소' and weather == 'Sun' else 1) * (1.5 if p1_team[p1_current_pokemon_id]['item']=='구애스카프' else 1)
+                    p1_speed = p2_team[p2_current_pokemon_id]["current_status"][5] * (
+                            2 + max(p2_team[p2_current_pokemon_id]["rank"][4], 0)) / (
+                                       2 - min(p2_team[p2_current_pokemon_id]["rank"][4], 0)) * (
+                                   0.5 if p2_team[p2_current_pokemon_id]["status"] == "Paralysis" else 1) * (
+                                   1.5 if p1_team[p1_current_pokemon_id]['ability'] == '고대활성' and
+                                          p1_team[p1_current_pokemon_id]['max_status'][1:6].index(
+                                              max(p1_team[p1_current_pokemon_id]['max_status'][1:6])) == 5 and
+                                          weather == 'Sun' else 1) * (
+                                   2 if p2_team[p2_current_pokemon_id]['ability'] == '엽록소' and weather == 'Sun' else 1) * (1.5 if p2_team[p2_current_pokemon_id]['item']=='구애스카프' else 1)
                 else:
-                    p1_speed = p1_team[p1_current_pokemon_id]["current_status"][5] * (2 + max(p1_team[p1_current_pokemon_id]["rank"][4],0)) / (
-                                2 - min(p1_team[p1_current_pokemon_id]["rank"][4],0)) * (0.5 if p1_team[p1_current_pokemon_id]["status"] == "Paralysis" else 1)
-                    p2_speed = p2_team[p2_current_pokemon_id]["current_status"][5] * (2 + max(p2_team[p2_current_pokemon_id]["rank"][4],0)) / (
-                                2 - min(p2_team[p2_current_pokemon_id]["rank"][4],0)) * (0.5 if p2_team[p2_current_pokemon_id]["status"] == "Paralysis" else 1)
+                    p1_speed = p1_team[p1_current_pokemon_id]["current_status"][5] * (
+                            2 + max(p1_team[p1_current_pokemon_id]["rank"][4], 0)) / (
+                                       2 - min(p1_team[p1_current_pokemon_id]["rank"][4], 0)) * (
+                                   0.5 if p1_team[p1_current_pokemon_id]["status"] == "Paralysis" else 1) * (
+                                   1.5 if p2_team[p2_current_pokemon_id]['ability'] == '고대활성' and
+                                          p2_team[p2_current_pokemon_id]['max_status'][1:6].index(
+                                              max(p2_team[p2_current_pokemon_id]['max_status'][1:6])) == 5 and
+                                          weather == 'Sun' else 1) * (
+                                   2 if p1_team[p1_current_pokemon_id]['ability'] == '엽록소' and weather == 'Sun' else 1) * (1.5 if p1_team[p1_current_pokemon_id]['item']=='구애스카프' else 1)
+                    p2_speed = p2_team[p2_current_pokemon_id]["current_status"][5] * (
+                            2 + max(p2_team[p2_current_pokemon_id]["rank"][4], 0)) / (
+                                       2 - min(p2_team[p2_current_pokemon_id]["rank"][4], 0)) * (
+                                   0.5 if p2_team[p2_current_pokemon_id]["status"] == "Paralysis" else 1) * (
+                                   1.5 if p1_team[p1_current_pokemon_id]['ability'] == '고대활성' and
+                                          p1_team[p1_current_pokemon_id]['max_status'][1:6].index(
+                                              max(p1_team[p1_current_pokemon_id]['max_status'][1:6])) == 5 and
+                                          weather == 'Sun' else 1) * (
+                                   2 if p2_team[p2_current_pokemon_id]['ability'] == '엽록소' and weather == 'Sun' else 1) * (1.5 if p2_team[p2_current_pokemon_id]['item']=='구애스카프' else 1)
                 if p1_speed > p2_speed:
                     p1_team[p1_current_pokemon_id]["rank"]=[0,0,0,0,0,0,0,0]
+                    p1_team[p1_current_pokemon_id]['type']=p1_team[p1_current_pokemon_id]['Atype']
+                    p1_team[p1_current_pokemon_id]['skill_bind']=None
+                    p1_team[p1_current_pokemon_id]['skill_bind_turn']=0
                     p1_current_pokemon_id = p1_idx
-                    p1_team[p1_current_pokemon_id]['current_status'][0] = p1_team[p1_current_pokemon_id]["current_status"][0]
+                    if p1_team[p1_current_pokemon_id]['ability']=='위협':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - 위협')
+                        if p2_team[p2_current_pokemon_id]["rank"][0]==-6:
+                            print(f'{p2_team[p2_current_pokemon_id]["name"]}의 공격은 더 이상 떨어지지 않는다!')
+                        else:
+                            print(f'{p2_team[p2_current_pokemon_id]["name"]}의 공격이 떨어졌다!')
+                            if p2_team[p2_current_pokemon_id]["ability"] == '승기':
+                                print(f"{p2_team[p2_current_pokemon_id]['name']} - 승기")
+                                if p2_team[p2_current_pokemon_id]["rank"][2] == 6:
+                                    print(f"하지만 {p2_team[p2_current_pokemon_id]['name']}의 특수공격은 더 이상 오르지 않는다!")
+                                else:
+                                    p2_team[p2_current_pokemon_id]["rank"][2] = int(
+                                        numpy.median([-6, 6, p2_team[p2_current_pokemon_id]["rank"][2] + 2]))
+                                    print(f"{p2_team[p2_current_pokemon_id]['name']}의 특수공격이 크게 올라갔다!")
+                        p2_team[p2_current_pokemon_id]['rank'][0]=max(-6,p2_team[p2_current_pokemon_id]['rank'][0]-1)
+                    elif p1_team[p1_current_pokemon_id]['ability']=='그래스메이커':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - 그래스메이커')
+                        print("발밑에 풀이 무성해졌다!")
+                        field="Grass"
+                        field_timer=(8 if p1_team[p1_current_pokemon_id]['item']=='그라운드코트' else 5)
+                    if p1_spike and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 압정에 의한 피해를 입었다!")
+                        p1_team[p1_current_pokemon_id]['current_status'][0]-=p1_team[p1_current_pokemon_id]['max_status'][0]//(8 if p1_spike==3 else (6 if p1_spike==2 else 4))
+                    if '독' in p1_team[p1_current_pokemon_id]['type']:
+                        p1_Pspike=0
+                    if p1_Pspike and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠' and p1_team[p1_current_pokemon_id]['ability']=='면역' and not p1_team[p1_current_pokemon_id]['status']==None:
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 독압정에 의해 독을 입었다!")
+                        p1_team[p1_current_pokemon_id]['status']=("Poison" if p1_Pspike==1 else "SPoison")
+                    if p1_web and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 끈적끈적네트에 의해 스피드가 떨어졌다!")
+                        p1_team[p1_current_pokemon_id]['rank'][5]-=1
+                    if p1_srock:
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}에게 뾰족한 바위가 박혔다!")
+                        p1_team[p1_current_pokemon_id]['current_status'][0]-=(p1_team[p1_current_pokemon_id]['max_status']//8)*type_multiplier("바위",p1_team[p1_current_pokemon_id]['type'])
 
                     p2_team[p2_current_pokemon_id]["rank"] = [0, 0, 0, 0, 0, 0, 0, 0]
+                    p2_team[p2_current_pokemon_id]['type']=p2_team[p2_current_pokemon_id]['Atype']
+                    p2_team[p2_current_pokemon_id]['skill_bind']=None
+                    p2_team[p2_current_pokemon_id]['skill_bind_turn']=0
                     p2_current_pokemon_id = p2_idx
-                    p2_team[p2_current_pokemon_id]["current_status"][0] = p2_team[p2_current_pokemon_id]["current_status"][0]
+                    if p2_team[p2_current_pokemon_id]['ability']=='위협':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - 위협')
+                        if p1_team[p1_current_pokemon_id]["rank"][0]==-6:
+                            print(f'{p1_team[p1_current_pokemon_id]["name"]}의 공격은 더 이상 떨어지지 않는다!')
+                        else:
+                            print(f'{p1_team[p1_current_pokemon_id]["name"]}의 공격이 떨어졌다!')
+                            if p1_team[p1_current_pokemon_id]["ability"] == '승기':
+                                print(f"{p1_team[p1_current_pokemon_id]['name']} - 승기")
+                                if p1_team[p1_current_pokemon_id]["rank"][2] == 6:
+                                    print(f"하지만 {p1_team[p1_current_pokemon_id]['name']}의 특수공격은 더 이상 오르지 않는다!")
+                                else:
+                                    p1_team[p1_current_pokemon_id]["rank"][2] = int(
+                                        numpy.median([-6, 6, p1_team[p1_current_pokemon_id]["rank"][2] + 2]))
+                                    print(f"{p1_team[p1_current_pokemon_id]['name']}의 특수공격이 크게 올라갔다!")
+                        p1_team[p1_current_pokemon_id]['rank'][0]=max(-6,p1_team[p1_current_pokemon_id]['rank'][0]-1)
+                    elif p2_team[p2_current_pokemon_id]['ability']=='그래스메이커':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - 그래스메이커')
+                        print("발밑에 풀이 무성해졌다!")
+                        field="Grass"
+                        field_timer=(8 if p2_team[p2_current_pokemon_id]['item']=='그라운드코트' else 5)
+                    if p2_spike and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 압정에 의한 피해를 입었다!")
+                        p2_team[p2_current_pokemon_id]['current_status'][0]-=p2_team[p2_current_pokemon_id]['max_status'][0]//(8 if p2_spike==3 else (6 if p2_spike==2 else 4))
+                    if '독' in p2_team[p2_current_pokemon_id]['type']:
+                        p2_Pspike=0
+                    if p2_Pspike and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠' and p2_team[p2_current_pokemon_id]['ability']=='면역' and not p2_team[p2_current_pokemon_id]['status']==None:
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 독압정에 의해 독을 입었다!")
+                        p2_team[p2_current_pokemon_id]['status']=("Poison" if p2_Pspike==1 else "SPoison")
+                    if p2_web and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 끈적끈적네트에 의해 스피드가 떨어졌다!")
+                        p2_team[p2_current_pokemon_id]['rank'][5]-=1
+                    if p2_srock:
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}에게 뾰족한 바위가 박혔다!")
+                        p2_team[p2_current_pokemon_id]['current_status'][0]-=(p2_team[p2_current_pokemon_id]['max_status']//8)*type_multiplier("바위",p2_team[p2_current_pokemon_id]['type'])
                 else:
                     p2_team[p2_current_pokemon_id]["rank"] = [0, 0, 0, 0, 0, 0, 0, 0]
+                    p2_team[p2_current_pokemon_id]['type']=p2_team[p2_current_pokemon_id]['Atype']
+                    p2_team[p2_current_pokemon_id]['skill_bind']=None
+                    p2_team[p2_current_pokemon_id]['skill_bind_turn']=0
                     p2_current_pokemon_id = p2_idx
-                    p2_team[p2_current_pokemon_id]["current_status"][0] = p2_team[p2_current_pokemon_id]["current_status"][0]
+                    if p2_team[p2_current_pokemon_id]['ability']=='위협':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - 위협')
+                        if p1_team[p1_current_pokemon_id]["rank"][0]==-6:
+                            print(f'{p1_team[p1_current_pokemon_id]["name"]}의 공격은 더 이상 떨어지지 않는다!')
+                        else:
+                            print(f'{p1_team[p1_current_pokemon_id]["name"]}의 공격이 떨어졌다!')
+                            if p1_team[p1_current_pokemon_id]["ability"] == '승기':
+                                print(f"{p1_team[p1_current_pokemon_id]['name']} - 승기")
+                                if p1_team[p1_current_pokemon_id]["rank"][2] == 6:
+                                    print(f"하지만 {p1_team[p1_current_pokemon_id]['name']}의 특수공격은 더 이상 오르지 않는다!")
+                                else:
+                                    p1_team[p1_current_pokemon_id]["rank"][2] = int(numpy.median([-6, 6, p1_team[p1_current_pokemon_id]["rank"][2] + 2]))
+                                    print(f"{p1_team[p1_current_pokemon_id]['name']}의 특수공격이 크게 올라갔다!")
+                        p1_team[p1_current_pokemon_id]['rank'][0]=max(-6,p1_team[p1_current_pokemon_id]['rank'][0]-1)
+                    elif p2_team[p2_current_pokemon_id]['ability']=='그래스메이커':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - 그래스메이커')
+                        print("발밑에 풀이 무성해졌다!")
+                        field="Grass"
+                        field_timer=(8 if p2_team[p2_current_pokemon_id]['item']=='그라운드코트' else 5)
+                    if p2_spike and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 압정에 의한 피해를 입었다!")
+                        p2_team[p2_current_pokemon_id]['current_status'][0]-=p2_team[p2_current_pokemon_id]['max_status'][0]//(8 if p2_spike==3 else (6 if p2_spike==2 else 4))
+                    if '독' in p2_team[p2_current_pokemon_id]['type']:
+                        p2_Pspike=0
+                    if p2_Pspike and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠' and p2_team[p2_current_pokemon_id]['ability']=='면역' and not p2_team[p2_current_pokemon_id]['status']==None:
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 독압정에 의해 독을 입었다!")
+                        p2_team[p2_current_pokemon_id]['status']=("Poison" if p2_Pspike==1 else "SPoison")
+                    if p2_web and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 끈적끈적네트에 의해 스피드가 떨어졌다!")
+                        p2_team[p2_current_pokemon_id]['rank'][5]-=1
+                    if p2_srock:
+                        print(f"{p2_team[p2_current_pokemon_id]['name']}에게 뾰족한 바위가 박혔다!")
+                        p2_team[p2_current_pokemon_id]['current_status'][0]-=(p2_team[p2_current_pokemon_id]['max_status']//8)*type_multiplier("바위",p2_team[p2_current_pokemon_id]['type'])
 
                     p1_team[p1_current_pokemon_id]["rank"] = [0, 0, 0, 0, 0, 0, 0, 0]
+                    p1_team[p1_current_pokemon_id]['type']=p1_team[p1_current_pokemon_id]['Atype']
+                    p1_team[p1_current_pokemon_id]['skill_bind']=None
+                    p1_team[p1_current_pokemon_id]['skill_bind_turn']=0
                     p1_current_pokemon_id = p1_idx
-                    p1_team[p1_current_pokemon_id]['current_status'][0] = p1_team[p1_current_pokemon_id]["current_status"][0]
+                    if p1_team[p1_current_pokemon_id]['ability']=='위협':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - 위협')
+                        if p2_team[p2_current_pokemon_id]["rank"][0]==-6:
+                            print(f'{p2_team[p2_current_pokemon_id]["name"]}의 공격은 더 이상 떨어지지 않는다!')
+                        else:
+                            print(f'{p2_team[p2_current_pokemon_id]["name"]}의 공격이 떨어졌다!')
+                            if p2_team[p2_current_pokemon_id]["ability"] == '승기':
+                                print(f"{p2_team[p2_current_pokemon_id]['name']} - 승기")
+                                if p2_team[p2_current_pokemon_id]["rank"][2] == 6:
+                                    print(f"하지만 {p2_team[p2_current_pokemon_id]['name']}의 특수공격은 더 이상 오르지 않는다!")
+                                else:
+                                    p2_team[p2_current_pokemon_id]["rank"][2] = int(
+                                        numpy.median([-6, 6, p2_team[p2_current_pokemon_id]["rank"][2] + 2]))
+                                    print(f"{p2_team[p2_current_pokemon_id]['name']}의 특수공격이 크게 올라갔다!")
+                        p2_team[p2_current_pokemon_id]['rank'][0]=max(-6,p2_team[p2_current_pokemon_id]['rank'][0]-1)
+                    elif p1_team[p1_current_pokemon_id]['ability']=='그래스메이커':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - 그래스메이커')
+                        print("발밑에 풀이 무성해졌다!")
+                        field="Grass"
+                        field_timer=(8 if p1_team[p1_current_pokemon_id]['item']=='그라운드코트' else 5)
+                    if p1_spike and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 압정에 의한 피해를 입었다!")
+                        p1_team[p1_current_pokemon_id]['current_status'][0]-=p1_team[p1_current_pokemon_id]['max_status'][0]//(8 if p1_spike==3 else (6 if p1_spike==2 else 4))
+                    if '독' in p1_team[p1_current_pokemon_id]['type']:
+                        p1_Pspike=0
+                    if p1_Pspike and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠' and p1_team[p1_current_pokemon_id]['ability']=='면역' and not p1_team[p1_current_pokemon_id]['status']==None:
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 독압정에 의해 독을 입었다!")
+                        p1_team[p1_current_pokemon_id]['status']=("Poison" if p1_Pspike==1 else "SPoison")
+                    if p1_web and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠':
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 끈적끈적네트에 의해 스피드가 떨어졌다!")
+                        p1_team[p1_current_pokemon_id]['rank'][5]-=1
+                    if p1_srock:
+                        print(f"{p1_team[p1_current_pokemon_id]['name']}에게 뾰족한 바위가 박혔다!")
+                        p1_team[p1_current_pokemon_id]['current_status'][0]-=(p1_team[p1_current_pokemon_id]['max_status']//8)*type_multiplier("바위",p1_team[p1_current_pokemon_id]['type'])
             elif p1_action=='교체':
                 p1_team[p1_current_pokemon_id]["rank"] = [0, 0, 0, 0, 0, 0, 0, 0]
+                p1_team[p1_current_pokemon_id]['type']=p1_team[p1_current_pokemon_id]['Atype']
+                p1_team[p1_current_pokemon_id]['skill_bind']=None
+                p1_team[p1_current_pokemon_id]['skill_bind_turn']=0
                 p1_current_pokemon_id = p1_idx
-                p1_team[p1_current_pokemon_id]['current_status'][0] = p1_team[p1_current_pokemon_id]["current_status"][0]
+                if p1_team[p1_current_pokemon_id]['ability']=='위협':
+                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - 위협')
+                    if p2_team[p2_current_pokemon_id]["rank"][0]==-6:
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]}의 공격은 더 이상 떨어지지 않는다!')
+                    else:
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]}의 공격이 떨어졌다!')
+                        if p2_team[p2_current_pokemon_id]["ability"] == '승기':
+                            print(f"{p2_team[p2_current_pokemon_id]['name']} - 승기")
+                            if p2_team[p2_current_pokemon_id]["rank"][2] == 6:
+                                print(f"하지만 {p2_team[p2_current_pokemon_id]['name']}의 특수공격은 더 이상 오르지 않는다!")
+                            else:
+                                p2_team[p2_current_pokemon_id]["rank"][2] = int(
+                                    numpy.median([-6, 6, p2_team[p2_current_pokemon_id]["rank"][2] + 2]))
+                                print(f"{p2_team[p2_current_pokemon_id]['name']}의 특수공격이 크게 올라갔다!")
+                    p2_team[p2_current_pokemon_id]['rank'][0]=max(-6,p2_team[p2_current_pokemon_id]['rank'][0]-1)
+                elif p1_team[p1_current_pokemon_id]['ability']=='그래스메이커':
+                    print(f'{p1_team[p1_current_pokemon_id]["name"]} - 그래스메이커')
+                    print("발밑에 풀이 무성해졌다!")
+                    field="Grass"
+                    field_timer=(8 if p1_team[p1_current_pokemon_id]['item']=='그라운드코트' else 5)
+                if p1_spike and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠':
+                    print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 압정에 의한 피해를 입었다!")
+                    p1_team[p1_current_pokemon_id]['current_status'][0]-=p1_team[p1_current_pokemon_id]['max_status'][0]//(8 if p1_spike==3 else (6 if p1_spike==2 else 4))
+                if '독' in p1_team[p1_current_pokemon_id]['type']:
+                    p1_Pspike=0
+                if p1_Pspike and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠' and p1_team[p1_current_pokemon_id]['ability']=='면역' and not p1_team[p1_current_pokemon_id]['status']==None:
+                    print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 독압정에 의해 독을 입었다!")
+                    p1_team[p1_current_pokemon_id]['status']=("Poison" if p1_Pspike==1 else "SPoison")
+                if p1_web and not "비행" in p1_team[p1_current_pokemon_id]['type'] and not p1_team[p1_current_pokemon_id]['item']=='통굽부츠':
+                    print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 끈적끈적네트에 의해 스피드가 떨어졌다!")
+                    p1_team[p1_current_pokemon_id]['rank'][5]-=1
+                if p1_srock:
+                    print(f"{p1_team[p1_current_pokemon_id]['name']}에게 뾰족한 바위가 박혔다!")
+                    p1_team[p1_current_pokemon_id]['current_status'][0]-=(p1_team[p1_current_pokemon_id]['max_status']//8)*type_multiplier("바위",p1_team[p1_current_pokemon_id]['type'])
 
                 attacker_num,attacker,move_name,move_data=(2,p2_team[p2_current_pokemon_id],p2_move_choice,move2)
                 defender=p1_team[p1_current_pokemon_id]
                 defender_hp=p1_team[p1_current_pokemon_id]['current_status'][0]
+                if attacker['ability']=='리베로' or attacker['ability']=='변환자재' and turn==1:
+                    print(f'{attacker["name"]} - {attacker["ability"]}')
+                    print(f'{attacker["name"]}은(는) {move_data["type"]}타입으로 변화했다!')
+                    (p1_team[p1_current_pokemon_id] if attacker_num==1 else p2_team[p2_current_pokemon_id])['type']=[[move_data['type']]]
+                if attacker['item']=='구애머리띠' or attacker['item']=='구애안경' or attacker['item']=='구애스카프':
+                    (p1_team[p1_current_pokemon_id] if attacker_num==1 else p2_team[p2_current_pokemon_id])['skill_bind']=move_name
+                    (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])['skill_bind_turn'] = 10000
                 if move_data['name']=='솔라빔' and p2_charge==0:
                     if not weather=='Sun':
                         p2_team[p2_current_pokemon_id]['next_move']=move_data
@@ -1516,6 +1909,38 @@ while True:
                     print(f"{attacker['name']}의 {move_name}!")
                     print("하지만 실패했다!")
                     continue
+                if move_name == '압정뿌리기':
+                    print(f"{attacker['name']}의 {move_name}!")
+                    if attacker_num==2:
+                        p1_spike=min(3,p1_spike+1)
+                    else:
+                        p2_spike=min(3,p1_spike+1)
+                    print(f"{defender['name']}의 발밑에 압정 뿌리기가 펼쳐졌다!")
+                    continue
+                if move_name == '독압정':
+                    print(f"{attacker['name']}의 {move_name}!")
+                    if attacker_num==2:
+                        p1_Pspike=min(2,p1_Pspike+1)
+                    else:
+                        p2_Pspike=min(2,p1_Pspike+1)
+                    print(f"{defender['name']}의 발밑에 독압정이 펼쳐졌다!")
+                    continue
+                if move_name == '스텔스록':
+                    print(f"{attacker['name']}의 {move_name}!")
+                    if attacker_num==2:
+                        p1_srock=min(1,p1_srock+1)
+                    else:
+                        p2_srock=min(1,p1_srock+1)
+                    print(f"{defender['name']}의 주변에 뾰족한 바위가 떠다니기 시작했다!")
+                    continue
+                if move_name == '끈적끈적네트':
+                    print(f"{attacker['name']}의 {move_name}!")
+                    if attacker_num==2:
+                        p1_web=min(1,p1_web+1)
+                    else:
+                        p2_web=min(1,p1_web+1)
+                    print(f"{defender['name']}의 발밑에 끈적끈적네트가 펼쳐졌다!")
+                    continue
                 if move_data['category'] == '변화':
                     par_flag, flinch_flag, except_flag = 0, 0, 0
                     if random.random() < int(move_data["accuracy"]) / 100 * (
@@ -1539,14 +1964,45 @@ while True:
                             continue
                         print(f"{attacker['name']}의 {move_name}!")
                         p1_team[p1_current_pokemon_id]=(
-                            another_effect(p2_team[p2_current_pokemon_id], p1_team[p1_current_pokemon_id], move_data, hit))
+                            another_effect(p2_team[p2_current_pokemon_id], p1_team[p1_current_pokemon_id], move_data, hit,weather))
                         p2_team[p2_current_pokemon_id]['rank']=side_effect(p2_team[p2_current_pokemon_id], move_data, hit)
+                        if int(move_data["return"]) and p2_current < 2:
+                            ca = 1
+                            while ca:
+                                chosen_pokemon, p2_idx, ca = choose_pokemon(2, p2_team, p2_current_pokemon_id)
+                            p2_team[p2_current_pokemon_id]["turn"] = 0
+                            p2_team[p2_current_pokemon_id]["rank"] = [0, 0, 0, 0, 0, 0, 0, 0]
+                            p2_current_pokemon_id = p2_idx
+                            p2_team[p2_current_pokemon_id]["current_status"][0] = \
+                                p2_team[p2_current_pokemon_id]["current_status"][0]
                         continue
                     else:
                         print(f"{attacker['name']}의 {move_name}!")
                         print(f"하지만 빗나갔다!")
                         continue
-
+                if move_data['type'] == '불꽃' and defender['ability'] == '타오르는불꽃':
+                    print(f"{attacker['name']}의 {move_name}!")
+                    print(f"{defender['name']} - 타오르는불꽃")
+                    print(f"{defender['name']}은(는) 더 맹렬히 타오르기 시작했다!")
+                    (p2_team[p2_current_pokemon_id] if attacker_num == 1 else p1_team[p1_current_pokemon_id])[
+                        'ability_flag'] = True
+                    continue
+                if int(move_data['sequence']) == 2:
+                    sequence_flag=2
+                elif int(move_data['sequence'])==5:
+                    if random.random()<int(move_data['sequence_accuracy'])/100:
+                        if attacker['item'] == '속임수주사위':
+                            sr = random.randint(4, 5)
+                            move_data['power'] = move_data['sequence_power'] * sr
+                            sequence_flag = sr
+                        else:
+                            sr = random.choice([2]*7+[3]*7+[4]*3+[5]*3)
+                            move_data['power'] = move_data['sequence_power'] * sr
+                            sequence_flag = sr
+                    else:
+                        move_data['power'],move_data['accuracy']=0,0
+                elif int(move_data['sequence'])==3:
+                    sequence_flag=3
                 dmg, hit, type_mult, is_crit, par_flag, flinch_flag, except_flag = calculate_damage(attacker, defender,
                                                                                                     move_data,
                                                                                                     weather=weather,
@@ -1572,7 +2028,9 @@ while True:
                     continue
                 if not hit:
                     continue
-
+                if move_name=='탁쳐서떨구기':
+                    print(f'{defender["name"]}의 {defender["item"]}을(를) 탁 쳐서 떨구었다!')
+                    (p1_team[p1_current_pokemon_id] if attacker_num==2 else p2_team[p2_current_pokemon_id])['item']=None
                 if hit and not move_name == '발버둥':
                     attacker['PP'][p2_choose_move_index] -= 1
                 p1_team[p1_current_pokemon_id]['current_status'][0] -= dmg
@@ -1591,13 +2049,24 @@ while True:
                 else:
                     if is_crit:
                         print("급소에 맞았다!")
-                another_effect(p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id], defender, move_data, hit)
+                if not int(move_data['sequence'])==1:
+                    print(f'{sequence_flag}번 맞았다!')
+                (p1_team if attacker_num == 2 else p2_team)[p1_current_pokemon_id if attacker_num == 2 else p2_current_pokemon_id]=another_effect(p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id], defender, move_data, hit,weather)
                 (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])['rank']=side_effect(p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id], move_data, hit)
-                if '접촉' in move_data['property'] and p1_team[p1_current_pokemon_id][
-                    'status'] == None and random.random() <= 0.3 and attacker['ability'] == '독수' and not defender['ability']=='황금몸':
-                    print(f'{attacker["name"]} - 독수')
-                    print(f'{defender["name"]}의 몸에 독이 퍼졌다!')
-                    p1_team[p1_current_pokemon_id]['status'] = "Poison"
+                if '접촉' in move_data['property'] and (p1_team[p1_current_pokemon_id] if attacker_num==2 else p2_team[p2_current_pokemon_id])[
+                    'status'] == None and random.random() <= 0.3 and (attacker['ability'] == '독수' or attacker['ability']=='독가시')and not defender['ability']=='황금몸':
+                    if (weather == 'Sun' and defender['ability'] == '리프가드'):
+                        print(f'{attacker["name"]} - {attacker["ability"]}')
+                        print(f'{defender["name"]} - 리프가드')
+                        print(f'{defender["name"]}은(는) 상태 이상에 걸리지 않는다!')
+                    else:
+                        print(f'{attacker["name"]} - {attacker["ability"]}')
+                        print(f'{defender["name"]}의 몸에 독이 퍼졌다!')
+                        (p1_team[p1_current_pokemon_id] if attacker_num==2 else p2_team[p2_current_pokemon_id])['status'] = "Poison"
+                if attacker['ability']=='매지션' and not defender['item']==None and attacker['item']==None:
+                    print(f'{attacker["name"]} - 매지션')
+                    print(f'{attacker["name"]}은(는) {defender["name"]}으로부터 {defender["item"]}를 빼앗았다!')
+                    (p1_team[p1_current_pokemon_id] if attacker_num==1 else p2_team[p2_current_pokemon_id])['item'],(p1_team[p1_current_pokemon_id] if attacker_num==2 else p2_team[p2_current_pokemon_id])['item']=defender['item'],None
                 if p1_team[p1_current_pokemon_id]['current_status'][0] <= 0:
                     p1_team[p1_current_pokemon_id]['current_status'][0] = 0
                     print(f"{defender['name']}은(는) 기절했다!")
@@ -1614,6 +2083,13 @@ while True:
                     if attacker['item']=='생명의구슬':
                         print(f'{attacker["name"]}은(는) 생명이 조금 깎였다!')
                         p2_team[p2_current_pokemon_id]['current_status'][0]-=p2_team[p2_current_pokemon_id]['current_status'][0]//10
+                    if attacker['ability']=='자기과신':
+                        print(f'{attacker["name"]} - 자기과신')
+                        if attacker['rank'][0]==6:
+                            print(f'{attacker["name"]}의 공격은 더 이상 오르지 않는다!')
+                        else:
+                            print(f'{attacker["name"]}의 공격이 올랐다!')
+                            (p1_team[p1_current_pokemon_id]['rank'] if attacker_num==1 else p2_team[p2_current_pokemon_id]['rank'])[0]=min(6,attacker['rank'][0]+1)
                     break
                 elif p1_team[p1_current_pokemon_id]['current_status'][0] == 0 and p1_current >= 2:
                     print("플레이어 1의 포켓몬이 더 이상 남지 않았습니다")
@@ -1659,12 +2135,55 @@ while True:
                     break
             elif p2_action=='교체':
                 p2_team[p2_current_pokemon_id]["rank"] = [0, 0, 0, 0, 0, 0, 0, 0]
+                p2_team[p2_current_pokemon_id]['type']=p2_team[p2_current_pokemon_id]['Atype']
+                p2_team[p2_current_pokemon_id]['skill_bind']=None
+                p2_team[p2_current_pokemon_id]['skill_bind_turn']=0
                 p2_current_pokemon_id = p2_idx
-                p2_team[p2_current_pokemon_id]["current_status"][0] = p2_team[p2_current_pokemon_id]["current_status"][0]
+                if p2_team[p2_current_pokemon_id]['ability']=='위협':
+                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - 위협')
+                    if p1_team[p1_current_pokemon_id]["rank"][0]==-6:
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]}의 공격은 더 이상 떨어지지 않는다!')
+                    else:
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]}의 공격이 떨어졌다!')
+                        if p1_team[p1_current_pokemon_id]["ability"] == '승기':
+                            print(f"{p1_team[p1_current_pokemon_id]['name']} - 승기")
+                            if p1_team[p1_current_pokemon_id]["rank"][2] == 6:
+                                print(f"하지만 {p1_team[p1_current_pokemon_id]['name']}의 특수공격은 더 이상 오르지 않는다!")
+                            else:
+                                p1_team[p1_current_pokemon_id]["rank"][2] = int(
+                                    numpy.median([-6, 6, p1_team[p1_current_pokemon_id]["rank"][2] + 2]))
+                                print(f"{p1_team[p1_current_pokemon_id]['name']}의 특수공격이 크게 올라갔다!")
+                    p1_team[p1_current_pokemon_id]['rank'][0]=max(-6,p1_team[p1_current_pokemon_id]['rank'][0]-1)
+                elif p2_team[p2_current_pokemon_id]['ability']=='그래스메이커':
+                    print(f'{p2_team[p2_current_pokemon_id]["name"]} - 그래스메이커')
+                    print("발밑에 풀이 무성해졌다!")
+                    field="Grass"
+                    field_timer=(8 if p2_team[p2_current_pokemon_id]['item']=='그라운드코트' else 5)
+                if p2_spike and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠':
+                    print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 압정에 의한 피해를 입었다!")
+                    p2_team[p2_current_pokemon_id]['current_status'][0]-=p2_team[p2_current_pokemon_id]['max_status'][0]//(8 if p2_spike==3 else (6 if p2_spike==2 else 4))
+                if '독' in p2_team[p2_current_pokemon_id]['type']:
+                    p2_Pspike=0
+                if p2_Pspike and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠' and p2_team[p2_current_pokemon_id]['ability']=='면역' and not p2_team[p2_current_pokemon_id]['status']==None:
+                    print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 독압정에 의해 독을 입었다!")
+                    p2_team[p2_current_pokemon_id]['status']=("Poison" if p2_Pspike==1 else "SPoison")
+                if p2_web and not "비행" in p2_team[p2_current_pokemon_id]['type'] and not p2_team[p2_current_pokemon_id]['item']=='통굽부츠':
+                    print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 끈적끈적네트에 의해 스피드가 떨어졌다!")
+                    p2_team[p2_current_pokemon_id]['rank'][5]-=1
+                if p2_srock:
+                    print(f"{p2_team[p2_current_pokemon_id]['name']}에게 뾰족한 바위가 박혔다!")
+                    p2_team[p2_current_pokemon_id]['current_status'][0]-=(p2_team[p2_current_pokemon_id]['max_status']//8)*type_multiplier("바위",p2_team[p2_current_pokemon_id]['type'])
 
                 attacker_num, attacker, move_name, move_data = (1, p1_team[p1_current_pokemon_id], p1_move_choice, move1)
                 defender = p2_team[p2_current_pokemon_id] if attacker_num == 1 else p1_team[p1_current_pokemon_id]
                 defender_hp = p2_team[p2_current_pokemon_id]["current_status"][0] if attacker_num == 1 else p1_team[p1_current_pokemon_id]['current_status'][0]
+                if attacker['ability']=='리베로' or attacker['ability']=='변환자재' and turn==1:
+                    print(f'{attacker["name"]} - {attacker["ability"]}')
+                    print(f'{attacker["name"]}은(는) {move_data["type"]}타입으로 변화했다!')
+                    (p1_team[p1_current_pokemon_id] if attacker_num==1 else p2_team[p2_current_pokemon_id])['type']=[[move_data['type']]]
+                if attacker['item']=='구애머리띠' or attacker['item']=='구애안경' or attacker['item']=='구애스카프':
+                    (p1_team[p1_current_pokemon_id] if attacker_num==1 else p2_team[p2_current_pokemon_id])['skill_bind']=move_name
+                    (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])['skill_bind_turn'] = 10000
                 if move_data['name']=='솔라빔' and p1_charge==0:
                     if not weather=='Sun':
                         p1_team[p1_current_pokemon_id]['next_move']=move_data
@@ -1719,6 +2238,38 @@ while True:
                     print(f"{attacker['name']}의 {move_name}!")
                     print("하지만 실패했다!")
                     continue
+                if move_name == '압정뿌리기':
+                    print(f"{attacker['name']}의 {move_name}!")
+                    if attacker_num==2:
+                        p1_spike=min(3,p1_spike+1)
+                    else:
+                        p2_spike=min(3,p1_spike+1)
+                    print(f"{defender['name']}의 발밑에 압정 뿌리기가 펼쳐졌다!")
+                    continue
+                if move_name == '독압정':
+                    print(f"{attacker['name']}의 {move_name}!")
+                    if attacker_num==2:
+                        p1_Pspike=min(2,p1_Pspike+1)
+                    else:
+                        p2_Pspike=min(2,p1_Pspike+1)
+                    print(f"{defender['name']}의 발밑에 독압정이 펼쳐졌다!")
+                    continue
+                if move_name == '스텔스록':
+                    print(f"{attacker['name']}의 {move_name}!")
+                    if attacker_num==2:
+                        p1_srock=min(1,p1_srock+1)
+                    else:
+                        p2_srock=min(1,p1_srock+1)
+                    print(f"{defender['name']}의 주변에 뾰족한 바위가 떠다니기 시작했다!")
+                    continue
+                if move_name == '끈적끈적네트':
+                    print(f"{attacker['name']}의 {move_name}!")
+                    if attacker_num==2:
+                        p1_web=min(1,p1_web+1)
+                    else:
+                        p2_web=min(1,p1_web+1)
+                    print(f"{defender['name']}의 발밑에 끈적끈적네트가 펼쳐졌다!")
+                    continue
                 if move_data['category'] == '변화':
                     par_flag, flinch_flag, except_flag = 0, 0, 0
                     if random.random() < int(move_data["accuracy"]) / 100 * (
@@ -1741,13 +2292,45 @@ while True:
                             print(f"사이코필드가 {defender['name']}을(를) 지켜냈다!")
                             continue
                         print(f"{attacker['name']}의 {move_name}!")
-                        p2_team[p2_current_pokemon_id]=another_effect(p1_team[p1_current_pokemon_id], p2_team[p2_current_pokemon_id], move_data, hit)
+                        p2_team[p2_current_pokemon_id]=another_effect(p1_team[p1_current_pokemon_id], p2_team[p2_current_pokemon_id], move_data, hit,weather)
                         p1_team[p1_current_pokemon_id]['rank']=side_effect(p1_team[p1_current_pokemon_id], move_data, hit)
+                        if int(move_data["return"]) and p1_current < 2:
+                            ca = 1
+                            while ca:
+                                chosen_pokemon, p1_idx, ca = choose_pokemon(2, p1_team, p1_current_pokemon_id)
+                            p1_team[p1_current_pokemon_id]["turn"] = 0
+                            p1_team[p1_current_pokemon_id]["rank"] = [0, 0, 0, 0, 0, 0, 0, 0]
+                            p1_current_pokemon_id = p1_idx
+                            p1_team[p1_current_pokemon_id]["current_status"][0] = \
+                                p1_team[p1_current_pokemon_id]["current_status"][0]
                         continue
                     else:
                         print(f"{attacker['name']}의 {move_name}!")
                         print(f"하지만 빗나갔다!")
                         continue
+                if move_data['type'] == '불꽃' and defender['ability'] == '타오르는불꽃':
+                    print(f"{attacker['name']}의 {move_name}!")
+                    print(f"{defender['name']} - 타오르는불꽃")
+                    print(f"{defender['name']}은(는) 더 맹렬히 타오르기 시작했다!")
+                    (p2_team[p2_current_pokemon_id] if attacker_num == 1 else p1_team[p1_current_pokemon_id])[
+                        'ability_flag'] = True
+                    continue
+                if int(move_data['sequence']) == 2:
+                    sequence_flag = 2
+                elif int(move_data['sequence']) == 5:
+                    if random.random() < int(move_data['sequence_accuracy']) / 100:
+                        if attacker['item'] == '속임수주사위':
+                            sr = random.randint(4, 5)
+                            move_data['power'] = move_data['sequence_power'] * sr
+                            sequence_flag = sr
+                        else:
+                            sr = random.choice([2] * 7 + [3] * 7 + [4] * 3 + [5] * 3)
+                            move_data['power'] = move_data['sequence_power'] * sr
+                            sequence_flag = sr
+                    else:
+                        move_data['power'], move_data['accuracy'] = 0, 0
+                elif int(move_data['sequence']) == 3:
+                    sequence_flag = 3
                 dmg, hit, type_mult, is_crit, par_flag, flinch_flag, except_flag = calculate_damage(attacker, defender,
                                                                                                     move_data,
                                                                                                     weather=weather,
@@ -1795,8 +2378,30 @@ while True:
                 else:
                     if is_crit:
                         print("급소에 맞았다!")
-                p2_team[p2_current_pokemon_id]=another_effect(attacker, defender, move_data, hit)
+                if not int(move_data['sequence']) == 1:
+                    print(f'{sequence_flag}번 맞았다!')
+                p2_team[p2_current_pokemon_id]=another_effect(attacker, defender, move_data, hit,weather)
                 (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])['rank']=side_effect(p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id], move_data, hit)
+                if '접촉' in move_data['property'] and \
+                        (p1_team[p1_current_pokemon_id] if attacker_num == 2 else p2_team[p2_current_pokemon_id])[
+                            'status'] == None and random.random() <= 0.3 and (
+                        attacker['ability'] == '독수' or attacker['ability'] == '독가시') and not defender[
+                                                                                                 'ability'] == '황금몸':
+                    if (weather == 'Sun' and defender['ability'] == '리프가드'):
+                        print(f'{attacker["name"]} - {attacker["ability"]}')
+                        print(f'{defender["name"]} - 리프가드')
+                        print(f'{defender["name"]}은(는) 상태 이상에 걸리지 않는다!')
+                    else:
+                        print(f'{attacker["name"]} - {attacker["ability"]}')
+                        print(f'{defender["name"]}의 몸에 독이 퍼졌다!')
+                        (p1_team[p1_current_pokemon_id] if attacker_num == 2 else p2_team[p2_current_pokemon_id])[
+                            'status'] = "Poison"
+                if attacker['ability'] == '매지션' and not defender['item'] == None and attacker['item'] == None:
+                    print(f'{attacker["name"]} - 매지션')
+                    print(f'{attacker["name"]}은(는) {defender["name"]}으로부터 {defender["item"]}를 빼앗았다!')
+                    (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])['item'], \
+                    (p1_team[p1_current_pokemon_id] if attacker_num == 2 else p2_team[p2_current_pokemon_id])['item'] = \
+                    defender['item'], None
                 if (p2_team[p2_current_pokemon_id]["current_status"][0] if attacker_num == 1 else p1_team[p1_current_pokemon_id]['current_status'][0]) <= 0:
                     (p2_team[p2_current_pokemon_id] if attacker_num == 1 else p1_team[p1_current_pokemon_id])['current_status'][0] = 0
                     print(f"{defender['name']}은(는) 기절했다!")
@@ -1812,6 +2417,13 @@ while True:
                         print(f'{attacker["name"]}은(는) 생명이 조금 깎였다!')
                         p1_team[p1_current_pokemon_id]['current_status'][0]-=p1_team[p1_current_pokemon_id]['current_status'][0]//10
                     (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])['current_status'][0]-=rebound_calculate(attacker, dmg, move_data, hit)
+                    if attacker['ability']=='자기과신':
+                        print(f'{attacker["name"]} - 자기과신')
+                        if attacker['rank'][0]==6:
+                            print(f'{attacker["name"]}의 공격은 더 이상 오르지 않는다!')
+                        else:
+                            print(f'{attacker["name"]}의 공격이 올랐다!')
+                            (p1_team[p1_current_pokemon_id]['rank'] if attacker_num==1 else p2_team[p2_current_pokemon_id]['rank'])[0]=min(6,attacker['rank'][0]+1)
                     break
                 elif p2_team[p2_current_pokemon_id]["current_status"][0] == 0 and p2_current >= 2:
                     print("플레이어 2의 포켓몬이 더 이상 남지 않았습니다")
@@ -1872,7 +2484,7 @@ while True:
                                        1.5 if p2_team[p2_current_pokemon_id]['ability'] == '고대활성' and
                                               p2_team[p2_current_pokemon_id]['max_status'][1:6].index(
                                                   max(p2_team[p2_current_pokemon_id]['max_status'][1:6])) == 5 and
-                                              weather == 'Sun' else 1)
+                                              weather == 'Sun' else 1) * (2 if p1_team[p1_current_pokemon_id]['ability']=='엽록소' and weather=='Sun' else 1) * (1.5 if p1_team[p1_current_pokemon_id]['item']=='구애스카프' else 1)
                         p1_speed = p2_team[p2_current_pokemon_id]["current_status"][5] * (
                                     2 + max(p2_team[p2_current_pokemon_id]["rank"][4], 0)) / (
                                            2 - min(p2_team[p2_current_pokemon_id]["rank"][4], 0)) * (
@@ -1880,7 +2492,7 @@ while True:
                                        1.5 if p1_team[p1_current_pokemon_id]['ability'] == '고대활성' and
                                               p1_team[p1_current_pokemon_id]['max_status'][1:6].index(
                                                   max(p1_team[p1_current_pokemon_id]['max_status'][1:6])) == 5 and
-                                              weather == 'Sun' else 1)
+                                              weather == 'Sun' else 1) * (2 if p2_team[p2_current_pokemon_id]['ability']=='엽록소' and weather=='Sun' else 1) * (1.5 if p2_team[p2_current_pokemon_id]['item']=='구애스카프' else 1)
                     else:
                         p1_speed = p1_team[p1_current_pokemon_id]["current_status"][5] * (
                                     2 + max(p1_team[p1_current_pokemon_id]["rank"][4], 0)) / (
@@ -1889,7 +2501,7 @@ while True:
                                        1.5 if p1_team[p1_current_pokemon_id]['ability'] == '고대활성' and
                                               p1_team[p1_current_pokemon_id]['max_status'][1:6].index(
                                                   max(p1_team[p1_current_pokemon_id]['max_status'][1:6])) == 5 and
-                                              weather == 'Sun' else 1)
+                                              weather == 'Sun' else 1) * (2 if p1_team[p1_current_pokemon_id]['ability']=='엽록소' and weather=='Sun' else 1) * (1.5 if p1_team[p1_current_pokemon_id]['item']=='구애스카프' else 1)
                         p2_speed = p2_team[p2_current_pokemon_id]["current_status"][5] * (
                                     2 + max(p2_team[p2_current_pokemon_id]["rank"][4], 0)) / (
                                            2 - min(p2_team[p2_current_pokemon_id]["rank"][4], 0)) * (
@@ -1897,7 +2509,7 @@ while True:
                                        1.5 if p2_team[p2_current_pokemon_id]['ability'] == '고대활성' and
                                               p2_team[p2_current_pokemon_id]['max_status'][1:6].index(
                                                   max(p2_team[p2_current_pokemon_id]['max_status'][1:6])) == 5 and
-                                              weather == 'Sun' else 1)
+                                              weather == 'Sun' else 1) * (2 if p2_team[p2_current_pokemon_id]['ability']=='엽록소' and weather=='Sun' else 1) * (1.5 if p2_team[p2_current_pokemon_id]['item']=='구애스카프' else 1)
                     if p1_speed > p2_speed:
                         first, second = ((1, p1_team[p1_current_pokemon_id], p1_move_choice, move1,1),
                                          (2, p2_team[p2_current_pokemon_id], p2_move_choice, move2,2))
@@ -1916,6 +2528,14 @@ while True:
                     attacker_num, attacker, move_name, move_data,fs = turn
                     defender = p2_team[p2_current_pokemon_id] if attacker_num == 1 else p1_team[p1_current_pokemon_id]
                     defender_hp = p2_team[p2_current_pokemon_id]["current_status"][0] if attacker_num == 1 else p1_team[p1_current_pokemon_id]['current_status'][0]
+                    if attacker['ability'] == '리베로' or attacker['ability'] == '변환자재' and turn == 1:
+                        print(f'{attacker["name"]} - {attacker["ability"]}')
+                        print(f'{attacker["name"]}은(는) {move_data["type"]}타입으로 변화했다!')
+                        (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])[
+                            'type'] = [[move_data['type']]]
+                    if attacker['item']=='구애머리띠' or attacker['item']=='구애안경' or attacker['item']=='구애스카프':
+                        (p1_team[p1_current_pokemon_id] if attacker_num==1 else p2_team[p2_current_pokemon_id])['skill_bind']=move_name
+                        (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])['skill_bind_turn'] = 10000
                     if move_data['name'] == '솔라빔' and (p1_charge if attacker_num==1 else p2_charge) == 0:
                         if not weather == 'Sun':
                             (p1_team if attacker_num==1 else p2_team)[p1_current_pokemon_id if attacker_num==1 else p2_current_pokemon_id]['next_move'] = move_data
@@ -2003,6 +2623,39 @@ while True:
                         (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])['PP'][
                             p1_choose_move_index if attacker_num == 1 else p2_choose_move_index] -= 1
                         continue
+
+                    if move_name == '압정뿌리기':
+                        print(f"{attacker['name']}의 {move_name}!")
+                        if attacker_num == 2:
+                            p1_spike = min(3, p1_spike + 1)
+                        else:
+                            p2_spike = min(3, p1_spike + 1)
+                        print(f"{defender['name']}의 발밑에 압정 뿌리기가 펼쳐졌다!")
+                        continue
+                    if move_name == '독압정':
+                        print(f"{attacker['name']}의 {move_name}!")
+                        if attacker_num == 2:
+                            p1_Pspike = min(2, p1_Pspike + 1)
+                        else:
+                            p2_Pspike = min(2, p1_Pspike + 1)
+                        print(f"{defender['name']}의 발밑에 독압정이 펼쳐졌다!")
+                        continue
+                    if move_name == '스텔스록':
+                        print(f"{attacker['name']}의 {move_name}!")
+                        if attacker_num == 2:
+                            p1_srock = min(1, p1_srock + 1)
+                        else:
+                            p2_srock = min(1, p1_srock + 1)
+                        print(f"{defender['name']}의 주변에 뾰족한 바위가 떠다니기 시작했다!")
+                        continue
+                    if move_name == '끈적끈적네트':
+                        print(f"{attacker['name']}의 {move_name}!")
+                        if attacker_num == 2:
+                            p1_web = min(1, p1_web + 1)
+                        else:
+                            p2_web = min(1, p1_web + 1)
+                        print(f"{defender['name']}의 발밑에 끈적끈적네트가 펼쳐졌다!")
+                        continue
                     if move_data['category'] == '변화':
                         par_flag, flinch_flag, except_flag = 0, 0, 0
                         if random.random() < int(move_data["accuracy"]) / 100 * (
@@ -2027,7 +2680,7 @@ while True:
                             print(f"{attacker['name']}의 {move_name}!")
                             if defender['protect'] and another_effect((p1_team[p1_current_pokemon_id] if attacker_num ==1 else p2_team[p2_current_pokemon_id]),
                                                                                 (p2_team[p2_current_pokemon_id] if attacker_num ==1 else p1_team[p1_current_pokemon_id]), move_data,
-                                                                                hit) == (p2_team if attacker_num==1 else p1_team)[p2_current_pokemon_id if attacker_num==1 else p1_current_pokemon_id]:
+                                                                                hit,weather) == (p2_team if attacker_num==1 else p1_team)[p2_current_pokemon_id if attacker_num==1 else p1_current_pokemon_id]:
                                 print(f"{attacker['name']}의 {move_name}!")
                                 print(f"{defender['name']}은(는) 공격으로부터 몸을 지켜냈다!")
                                 (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[
@@ -2037,13 +2690,33 @@ while True:
                             else:
                                 (p2_team if attacker_num==1 else p1_team)[p2_current_pokemon_id if attacker_num==1 else p1_current_pokemon_id] = another_effect((p1_team[p1_current_pokemon_id] if attacker_num ==1 else p2_team[p2_current_pokemon_id]),
                                                                                 (p2_team[p2_current_pokemon_id] if attacker_num ==1 else p1_team[p1_current_pokemon_id]), move_data,
-                                                                                hit)
+                                                                                hit,weather)
                             (p1_team[p1_current_pokemon_id] if attacker_num ==1 else p2_team[p2_current_pokemon_id])['rank'] = side_effect((p1_team[p1_current_pokemon_id] if attacker_num ==1 else p2_team[p2_current_pokemon_id]),
                                                                                  move_data, hit)
                             (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])[
                                 'PP'][
                                 p1_choose_move_index if attacker_num == 1 else p2_choose_move_index] -= 1
                             continue
+                            if attacker_num==1:
+                                if int(move_data["return"]) and p1_current < 2:
+                                    ca = 1
+                                    while ca:
+                                        chosen_pokemon, p1_idx, ca = choose_pokemon(2, p1_team, p1_current_pokemon_id)
+                                    p1_team[p1_current_pokemon_id]["turn"] = 0
+                                    p1_team[p1_current_pokemon_id]["rank"] = [0, 0, 0, 0, 0, 0, 0, 0]
+                                    p1_current_pokemon_id = p1_idx
+                                    p1_team[p1_current_pokemon_id]["current_status"][0] = \
+                                        p1_team[p1_current_pokemon_id]["current_status"][0]
+                            else:
+                                if int(move_data["return"]) and p2_current < 2:
+                                    ca = 1
+                                    while ca:
+                                        chosen_pokemon, p2_idx, ca = choose_pokemon(2, p2_team, p2_current_pokemon_id)
+                                    p2_team[p2_current_pokemon_id]["turn"] = 0
+                                    p2_team[p2_current_pokemon_id]["rank"] = [0, 0, 0, 0, 0, 0, 0, 0]
+                                    p2_current_pokemon_id = p2_idx
+                                    p2_team[p2_current_pokemon_id]["current_status"][0] = \
+                                        p2_team[p2_current_pokemon_id]["current_status"][0]
                         else:
                             print(f"{attacker['name']}의 {move_name}!")
                             print(f"하지만 빗나갔다!")
@@ -2054,6 +2727,28 @@ while True:
                         (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])['PP'][
                             p1_choose_move_index if attacker_num == 1 else p2_choose_move_index] -= 1
                         continue
+                    if move_data['type']=='불꽃' and defender['ability']=='타오르는불꽃':
+                        print(f"{attacker['name']}의 {move_name}!")
+                        print(f"{defender['name']} - 타오르는불꽃")
+                        print(f"{defender['name']}은(는) 더 맹렬히 타오르기 시작했다!")
+                        (p2_team[p2_current_pokemon_id] if attacker_num==1 else p1_team[p1_current_pokemon_id])['ability_flag']=True
+                        continue
+                    if int(move_data['sequence']) == 2:
+                        sequence_flag=2
+                    elif int(move_data['sequence'])==5:
+                        if random.random()<int(move_data['sequence_accuracy'])/100:
+                            if attacker['item'] == '속임수주사위':
+                                sr = random.randint(4, 5)
+                                move_data['power'] = move_data['sequence_power'] * sr
+                                sequence_flag = sr
+                            else:
+                                sr = random.choice([2]*7+[3]*7+[4]*3+[5]*3)
+                                move_data['power'] = move_data['sequence_power'] * sr
+                                sequence_flag = sr
+                        else:
+                            move_data['power'],move_data['accuracy']=0,0
+                    elif int(move_data['sequence'])==3:
+                        sequence_flag=3
                     dmg, hit, type_mult, is_crit, par_flag, flinch_flag, except_flag = calculate_damage(attacker, defender, move_data,
                                                                                            weather=weather,
                                                                                            reflect=p1_reflect if attacker_num == 1 else p2_reflect,
@@ -2101,16 +2796,45 @@ while True:
                     else:
                         if is_crit:
                             print("급소에 맞았다!")
-                    another_effect(attacker, defender, move_data, hit)
-                    side_effect(attacker,move_data, hit)
+                    if not int(move_data['sequence'])==1:
+                        print(f'{sequence_flag}번 맞았다!')
+                    (p1_team if attacker_num == 2 else p2_team)[p1_current_pokemon_id if attacker_num == 2 else p2_current_pokemon_id] = another_effect(
+                        p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id],
+                        defender, move_data, hit, weather)
+                    (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])[
+                        'rank'] = side_effect(
+                        p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id],
+                        move_data, hit)
+                    if '접촉' in move_data['property'] and \
+                            (p1_team[p1_current_pokemon_id] if attacker_num == 2 else p2_team[p2_current_pokemon_id])[
+                                'status'] == None and random.random() <= 0.3 and (
+                            attacker['ability'] == '독수' or attacker['ability'] == '독가시') and not defender[
+                                                                                                     'ability'] == '황금몸':
+                        if (weather == 'Sun' and defender['ability'] == '리프가드'):
+                            print(f'{attacker["name"]} - {attacker["ability"]}')
+                            print(f'{defender["name"]} - 리프가드')
+                            print(f'{defender["name"]}은(는) 상태 이상에 걸리지 않는다!')
+                        else:
+                            print(f'{attacker["name"]} - {attacker["ability"]}')
+                            print(f'{defender["name"]}의 몸에 독이 퍼졌다!')
+                            (p1_team[p1_current_pokemon_id] if attacker_num == 2 else p2_team[p2_current_pokemon_id])[
+                                'status'] = "Poison"
+                    if attacker['ability'] == '매지션' and not defender['item'] == None and attacker['item'] == None:
+                        print(f'{attacker["name"]} - 매지션')
+                        print(f'{attacker["name"]}은(는) {defender["name"]}으로부터 {defender["item"]}를 빼앗았다!')
+                        (p1_team[p1_current_pokemon_id] if attacker_num == 1 else p2_team[p2_current_pokemon_id])[
+                            'item'], \
+                        (p1_team[p1_current_pokemon_id] if attacker_num == 2 else p2_team[p2_current_pokemon_id])[
+                            'item'] = defender['item'], None
+
                     draw_battle_screen(p1_team[p1_current_pokemon_id], p2_team[p2_current_pokemon_id],
                                        p1_team[p1_current_pokemon_id]['current_status'][0],
                                        p2_team[p2_current_pokemon_id]["current_status"][0])
                     pygame.display.flip()
                     time.sleep(1.5)
                     if attacker_num == 1:
-                        if (p2_team[p2_current_pokemon_id]["current_status"][0] if attacker_num == 1 else p1_team[p1_current_pokemon_id]['current_status'][0]) <= 0:
-                            (p2_team[p2_current_pokemon_id] if attacker_num == 1 else p1_team[p1_current_pokemon_id])['current_status'][0] = 0
+                        if p2_team[p2_current_pokemon_id]["current_status"][0] <= 0:
+                            p2_team[p2_current_pokemon_id]['current_status'][0] = 0
                             print(f"{defender['name']}은(는) 기절했다!")
                         if p2_team[p2_current_pokemon_id]["current_status"][0] == 0 and p2_current < 2:
                             ca = 1
@@ -2121,6 +2845,14 @@ while True:
                             if attacker['item']=='생명의구슬':
                                 print(f'{attacker["name"]}은(는) 생명이 조금 깎였다!')
                                 p1_team[p1_current_pokemon_id]['current_status'][0]-=p1_team[p1_current_pokemon_id]['current_status'][0]//10
+                            if attacker['ability'] == '자기과신':
+                                print(f'{attacker["name"]} - 자기과신')
+                                if attacker['rank'][0] == 6:
+                                    print(f'{attacker["name"]}의 공격은 더 이상 오르지 않는다!')
+                                else:
+                                    print(f'{attacker["name"]}의 공격이 올랐다!')
+                                    (p1_team[p1_current_pokemon_id]['rank'] if attacker_num == 1 else
+                                     p2_team[p2_current_pokemon_id]['rank'])[0] = min(6, attacker['rank'][0] + 1)
                             wait_for_enter("battle_turn", f"2P 다음 포켓몬: {p2_team[p2_current_pokemon_id]['name']}")
                             p2_current += 1
                             p2_fainted_flag = 1
@@ -2130,8 +2862,8 @@ while True:
                             print("플레이어 1 승!")
                             exit()
                     else:
-                        if (p2_team[p2_current_pokemon_id]["current_status"][0] if attacker_num == 1 else p1_team[p1_current_pokemon_id]['current_status'][0]) <= 0:
-                            (p2_team[p2_current_pokemon_id] if attacker_num == 1 else p1_team[p1_current_pokemon_id])['current_status'][0] = 0
+                        if p1_team[p1_current_pokemon_id]['current_status'][0] <= 0:
+                            p1_team[p1_current_pokemon_id]['current_status'][0] = 0
                             print(f"{defender['name']}은(는) 기절했다!")
                         if p1_team[p1_current_pokemon_id]['current_status'][0] == 0 and p1_current < 2:
                             ca = 1
@@ -2143,6 +2875,14 @@ while True:
                             if attacker['item']=='생명의구슬':
                                 print(f'{attacker["name"]}은(는) 생명이 조금 깎였다!')
                                 p2_team[p2_current_pokemon_id]['current_status'][0]-=p2_team[p2_current_pokemon_id]['current_status'][0]//10
+                            if attacker['ability'] == '자기과신':
+                                print(f'{attacker["name"]} - 자기과신')
+                                if attacker['rank'][0] == 6:
+                                    print(f'{attacker["name"]}의 공격은 더 이상 오르지 않는다!')
+                                else:
+                                    print(f'{attacker["name"]}의 공격이 올랐다!')
+                                    (p1_team[p1_current_pokemon_id]['rank'] if attacker_num == 1 else
+                                     p2_team[p2_current_pokemon_id]['rank'])[0] = min(6, attacker['rank'][0] + 1)
                             wait_for_enter("battle_turn", f"2P 다음 포켓몬: {p1_team[p1_current_pokemon_id]['name']}")
                             p1_fainted_flag = 1
                             break
@@ -2176,6 +2916,7 @@ while True:
                         if (p2_team[p2_current_pokemon_id]["current_status"][0] if attacker_num == 1 else p1_team[p1_current_pokemon_id]['current_status'][0]) <= 0:
                             (p2_team[p2_current_pokemon_id] if attacker_num == 1 else p1_team[p1_current_pokemon_id])['current_status'][0] = 0
                             print(f"{defender['name']}은(는) 기절했다!")
+                            p1_current += 1
                         if p1_team[p1_current_pokemon_id]['current_status'][0] == 0 and p1_current < 2:
                             ca=1
                             while ca:
@@ -2213,28 +2954,47 @@ while True:
                         2 - min(p1_team[p1_current_pokemon_id]["rank"][4],0)) * (0.5 if p1_team[p1_current_pokemon_id]["status"] == "Paralysis" else 1) * (
                     1.5 if p2_team[p2_current_pokemon_id]['ability']=='고대활성' and
                            p2_team[p2_current_pokemon_id]['max_status'][1:6].index(max(p2_team[p2_current_pokemon_id]['max_status'][1:6]))==5 and
-                           weather=='Sun' else 1)
+                           weather=='Sun' else 1) * (2 if p1_team[p1_current_pokemon_id]['ability']=='엽록소' and weather=='Sun' else 1)
                 p1_speed = p2_team[p2_current_pokemon_id]["current_status"][5] * (2 + max(p2_team[p2_current_pokemon_id]["rank"][4],0)) / (
                         2 - min(p2_team[p2_current_pokemon_id]["rank"][4],0)) * (0.5 if p2_team[p2_current_pokemon_id]["status"] == "Paralysis" else 1) * (
                     1.5 if p1_team[p1_current_pokemon_id]['ability']=='고대활성' and
                            p1_team[p1_current_pokemon_id]['max_status'][1:6].index(max(p1_team[p1_current_pokemon_id]['max_status'][1:6]))==5 and
-                           weather=='Sun' else 1)
+                           weather=='Sun' else 1) * (2 if p2_team[p2_current_pokemon_id]['ability']=='엽록소' and weather=='Sun' else 1)
             else:
                 p1_speed = p1_team[p1_current_pokemon_id]["current_status"][5] * (2 + max(p1_team[p1_current_pokemon_id]["rank"][4],0)) / (
                         2 - min(p1_team[p1_current_pokemon_id]["rank"][4],0)) * (0.5 if p1_team[p1_current_pokemon_id]["status"] == "Paralysis" else 1) * (
                     1.5 if p1_team[p1_current_pokemon_id]['ability']=='고대활성' and
                            p1_team[p1_current_pokemon_id]['max_status'][1:6].index(max(p1_team[p1_current_pokemon_id]['max_status'][1:6]))==5 and
-                           weather=='Sun' else 1)
+                           weather=='Sun' else 1) * (2 if p1_team[p1_current_pokemon_id]['ability']=='엽록소' and weather=='Sun' else 1)
                 p2_speed = p2_team[p2_current_pokemon_id]["current_status"][5] * (2 + max(p2_team[p2_current_pokemon_id]["rank"][4],0)) / (
                         2 - min(p2_team[p2_current_pokemon_id]["rank"][4],0)) * (0.5 if p2_team[p2_current_pokemon_id]["status"] == "Paralysis" else 1) * (
                     1.5 if p2_team[p2_current_pokemon_id]['ability']=='고대활성' and
                            p2_team[p2_current_pokemon_id]['max_status'][1:6].index(max(p2_team[p2_current_pokemon_id]['max_status'][1:6]))==5 and
-                           weather=='Sun' else 1)
+                           weather=='Sun' else 1) * (2 if p2_team[p2_current_pokemon_id]['ability']=='엽록소' and weather=='Sun' else 1)
             if p1_speed>p2_speed:
                 if not p1_fainted_flag:
-                    if field=="Grass" and not(('비행' in p1_team[p1_current_pokemon_id]["type"] or p1_team[p1_current_pokemon_id]['ability']=='부유') and not gravity):
+                    if field == "Grass" and not (('비행' in p1_team[p1_current_pokemon_id]["type"] or
+                                                  p1_team[p1_current_pokemon_id]['ability'] == '부유') and not gravity):
                         print("그래스필드로 인해 체력이 회복되었다!")
-                        p1_team[p1_current_pokemon_id]['current_status'][0]=p1_team[p1_current_pokemon_id]["max_status"][0]//16
+                        if p1_team[p1_current_pokemon_id]["current_status"][0] + \
+                                p1_team[p1_current_pokemon_id]["max_status"][0] // 16 < \
+                                p1_team[p1_current_pokemon_id]['max_status'][0]:
+                            p1_team[p1_current_pokemon_id]["current_status"][0] += \
+                            p1_team[p1_current_pokemon_id]["max_status"][0] // 16
+                        else:
+                            p1_team[p1_current_pokemon_id]['current_status'][0] = \
+                            p1_team[p1_current_pokemon_id]['max_status'][0]
+                    if weather == 'Rain' and p1_team[p1_current_pokemon_id]['ability'] == '젖은접시':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - 젖은접시')
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]}은 체력을 회복했다!')
+                        if p1_team[p1_current_pokemon_id]["current_status"][0] + \
+                                p1_team[p1_current_pokemon_id]["max_status"][0] // 16 < \
+                                p1_team[p1_current_pokemon_id]['max_status'][0]:
+                            p1_team[p1_current_pokemon_id]["current_status"][0] += \
+                                p1_team[p1_current_pokemon_id]["max_status"][0] // 16
+                        else:
+                            p1_team[p1_current_pokemon_id]['current_status'][0] = \
+                                p1_team[p1_current_pokemon_id]['max_status'][0]
                     if weather=='SandStorm' and not ('땅' in p1_team[p1_current_pokemon_id]["type"] or
                                                      '강철' in p1_team[p1_current_pokemon_id]["type"] or
                                                      '바위' in p1_team[p1_current_pokemon_id]["type"]) and not (
@@ -2255,6 +3015,10 @@ while True:
                         print(f'{p1_team[p1_current_pokemon_id]["name"]}은(는) 독에 의한 데미지를 입었다!')
                         p1_team[p1_current_pokemon_id]['current_status'][0] -= (p1_team[p1_current_pokemon_id]["max_status"][0] // 16) * p1_team[p1_current_pokemon_id]["SPoison_cnt"]
                         p1_team[p1_current_pokemon_id]["SPoison_cnt"] += 1
+                    if p1_team[p1_current_pokemon_id]['ability']=='선파워' and weather=='Sun':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - 선파워')
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]}은(는) 생명이 조금 깎였다!')
+                        p1_team[p1_current_pokemon_id]['current_status'][0]-=p1_team[p1_current_pokemon_id]['current_status'][0]//8
                     if p1_team[p1_current_pokemon_id]['current_status'][0] <= 0:
                         p1_team[p1_current_pokemon_id]['current_status'][0] = 0
                         print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 기절했다!")
@@ -2272,11 +3036,49 @@ while True:
                         print("플레이어 2 승!")
                         exit()
                     if p1_team[p1_current_pokemon_id]['ability']=='가속' and p1_team[p1_current_pokemon_id]['turn']>=1:
-                        p1_team[p1_current_pokemon_id]['rank'][4]=min(6,p1_team[p1_current_pokemon_id]['rank'][4]+1)
+                        print(f"{p1_team[p1_current_pokemon_id]['name']} - 가속")
+                        if p1_team[p1_current_pokemon_id]['rank'][4]==6:
+                            print(f"{p1_team[p1_current_pokemon_id]['name']}의 스피드는 더 이상 오르지 않는다!")
+                        else:
+                            print(f"{p1_team[p1_current_pokemon_id]['name']}의 스피드가 올라갔다!")
+                            p1_team[p1_current_pokemon_id]['rank'][4]=min(6,p1_team[p1_current_pokemon_id]['rank'][4]+1)
+                    if p1_team[p1_current_pokemon_id]['ability']=='심술꾸러기' and p1_team[p1_current_pokemon_id]['turn']>=1:
+                        print(f"{p1_team[p1_current_pokemon_id]['name']} - 심술꾸러기")
+                        r1,r2=random.sample([0,1,2,3,4],2)
+                        ABCDS=["공격은","방어는","특수공격은","특수방어는","스피드는"]
+                        if p1_team[p1_current_pokemon_id]['rank'][r1]==6:
+                            print(f"{p1_team[p1_current_pokemon_id]['name']}의 {ABCDS[r1]} 더 이상 오르지 않는다!")
+                        else:
+                            print(f"{p1_team[p1_current_pokemon_id]['name']}의 {ABCDS[r1]:[:-1]}가 크게 올라갔다!")
+                            p1_team[p1_current_pokemon_id]['rank'][r1] = min(6, p1_team[p1_current_pokemon_id]['rank'][r1] + 2)
+                        if p1_team[p1_current_pokemon_id]['rank'][r2]==-6:
+                            print(f"{p1_team[p1_current_pokemon_id]['name']}의 {ABCDS[r2]} 더 이상 떨어지지 않는다!")
+                        else:
+                            print(f"{p1_team[p1_current_pokemon_id]['name']}의 {ABCDS[r2]:[:-1]}가 크게 떨어졌다!")
+                            p1_team[p1_current_pokemon_id]['rank'][r2] = max(-6, p1_team[p1_current_pokemon_id]['rank'][r2] - 2)
                 if not p2_fainted_flag:
-                    if field=="Grass" and not(('비행' in p2_team[p2_current_pokemon_id]["type"] or p2_team[p2_current_pokemon_id]['ability']=='부유') and not gravity):
+                    if field == "Grass" and not (('비행' in p2_team[p2_current_pokemon_id]["type"] or
+                                                  p2_team[p2_current_pokemon_id]['ability'] == '부유') and not gravity):
                         print("그래스필드로 인해 체력이 회복되었다!")
-                        p2_team[p2_current_pokemon_id]["current_status"][0]+=p2_team[p2_current_pokemon_id]["max_status"][0]//16
+                        if p2_team[p2_current_pokemon_id]["current_status"][0] + \
+                                p2_team[p2_current_pokemon_id]["max_status"][0] // 16 < \
+                                p2_team[p2_current_pokemon_id]['max_status'][0]:
+                            p2_team[p2_current_pokemon_id]["current_status"][0] += \
+                            p2_team[p2_current_pokemon_id]["max_status"][0] // 16
+                        else:
+                            p2_team[p2_current_pokemon_id]['current_status'][0] = \
+                            p2_team[p2_current_pokemon_id]['max_status'][0]
+                    if weather == 'Rain' and p2_team[p2_current_pokemon_id]['ability'] == '젖은접시':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - 젖은접시')
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]}은 체력을 회복했다!')
+                        if p2_team[p2_current_pokemon_id]["current_status"][0] + \
+                                p2_team[p2_current_pokemon_id]["max_status"][0] // 16 < \
+                                p2_team[p2_current_pokemon_id]['max_status'][0]:
+                            p2_team[p2_current_pokemon_id]["current_status"][0] += \
+                                p2_team[p2_current_pokemon_id]["max_status"][0] // 16
+                        else:
+                            p2_team[p2_current_pokemon_id]['current_status'][0] = \
+                                p2_team[p2_current_pokemon_id]['max_status'][0]
                     if weather=='SandStorm' and not ('땅' in p2_team[p2_current_pokemon_id]["type"] or
                                                      '강철' in p2_team[p2_current_pokemon_id]["type"] or
                                                      '바위' in p2_team[p2_current_pokemon_id]["type"]) and not (
@@ -2297,6 +3099,10 @@ while True:
                         print(f'{p2_team[p2_current_pokemon_id]["name"]}은(는) 맹독의 피해를 입고 있다!')
                         p2_team[p2_current_pokemon_id]["current_status"][0] -= (p2_team[p2_current_pokemon_id]["current_status"][0] // 16) * p2_team[p2_current_pokemon_id]["SPoison_cnt"]
                         p2_team[p2_current_pokemon_id]["SPoison_cnt"] += 1
+                    if p2_team[p2_current_pokemon_id]['ability']=='선파워' and weather=='Sun':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - 선파워')
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]}은(는) 생명이 조금 깎였다!')
+                        p2_team[p2_current_pokemon_id]['current_status'][0]-=p2_team[p2_current_pokemon_id]['current_status'][0]//8
                     if p2_team[p2_current_pokemon_id]['current_status'][0] <= 0:
                         p2_team[p2_current_pokemon_id]['current_status'][0] = 0
                         print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 기절했다!")
@@ -2314,13 +3120,49 @@ while True:
                         exit()
                     if p2_team[p2_current_pokemon_id]['ability'] == '가속' and p2_team[p2_current_pokemon_id][
                         'turn'] >= 1:
-                        p2_team[p2_current_pokemon_id]['rank'][4] = min(6, p2_team[p2_current_pokemon_id]['rank'][
-                            4] + 1)
+                        print(f"{p2_team[p2_current_pokemon_id]['name']} - 가속")
+                        if p2_team[p2_current_pokemon_id]['rank'][4] == 6:
+                            print(f"{p2_team[p2_current_pokemon_id]['name']}의 스피드는 더 이상 오르지 않는다!")
+                        else:
+                            print(f"{p2_team[p2_current_pokemon_id]['name']}의 스피드가 올라갔다!")
+                            p2_team[p2_current_pokemon_id]['rank'][4] = min(6, p2_team[p2_current_pokemon_id]['rank'][
+                                4] + 1)
+                    if p2_team[p2_current_pokemon_id]['ability'] == '심술꾸러기' and p2_team[p2_current_pokemon_id][
+                        'turn'] >= 1:
+                        print(f"{p2_team[p2_current_pokemon_id]['name']} - 심술꾸러기")
+                        r1, r2 = random.sample([0, 1, 2, 3, 4], 2)
+                        ABCDS = ["공격은", "방어는", "특수공격은", "특수방어는", "스피드는"]
+                        if p2_team[p2_current_pokemon_id]['rank'][r1] == 6:
+                            print(f"{p2_team[p2_current_pokemon_id]['name']}의 {ABCDS[r1]} 더 이상 오르지 않는다!")
+                        else:
+                            print(f"{p2_team[p2_current_pokemon_id]['name']}의 {ABCDS[r1]:[:-1]}가 크게 올라갔다!")
+                            p2_team[p2_current_pokemon_id]['rank'][r1] = min(6, p2_team[p2_current_pokemon_id]['rank'][
+                                r1] + 2)
+                        if p2_team[p2_current_pokemon_id]['rank'][r2] == -6:
+                            print(f"{p2_team[p2_current_pokemon_id]['name']}의 {ABCDS[r2]} 더 이상 떨어지지 않는다!")
+                        else:
+                            print(f"{p2_team[p2_current_pokemon_id]['name']}의 {ABCDS[r2]:[:-1]}가 크게 떨어졌다!")
+                            p2_team[p2_current_pokemon_id]['rank'][r2] = max(-6, p2_team[p2_current_pokemon_id]['rank'][
+                                r2] - 2)
             else:
                 if not p2_fainted_flag:
                     if field=="Grass" and not(('비행' in p2_team[p2_current_pokemon_id]["type"] or p2_team[p2_current_pokemon_id]['ability']=='부유') and not gravity):
                         print("그래스필드로 인해 체력이 회복되었다!")
-                        p2_team[p2_current_pokemon_id]["current_status"][0]+=p2_team[p2_current_pokemon_id]["max_status"][0]//16
+                        if p2_team[p2_current_pokemon_id]["current_status"][0]+p2_team[p2_current_pokemon_id]["max_status"][0]//16<p2_team[p2_current_pokemon_id]['max_status'][0]:
+                            p2_team[p2_current_pokemon_id]["current_status"][0]+=p2_team[p2_current_pokemon_id]["max_status"][0]//16
+                        else:
+                            p2_team[p2_current_pokemon_id]['current_status'][0]=p2_team[p2_current_pokemon_id]['max_status'][0]
+                    if weather=='Rain' and p2_team[p2_current_pokemon_id]['ability']=='젖은접시':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - 젖은접시')
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]}은 체력을 회복했다!')
+                        if p2_team[p2_current_pokemon_id]["current_status"][0] + \
+                                p2_team[p2_current_pokemon_id]["max_status"][0] // 16 < \
+                                p2_team[p2_current_pokemon_id]['max_status'][0]:
+                            p2_team[p2_current_pokemon_id]["current_status"][0] += \
+                            p2_team[p2_current_pokemon_id]["max_status"][0] // 16
+                        else:
+                            p2_team[p2_current_pokemon_id]['current_status'][0] = \
+                            p2_team[p2_current_pokemon_id]['max_status'][0]
                     if weather=='SandStorm' and not ('땅' in p2_team[p2_current_pokemon_id]["type"] or
                                                      '강철' in p2_team[p2_current_pokemon_id]["type"] or
                                                      '바위' in p2_team[p2_current_pokemon_id]["type"]) and not (
@@ -2341,6 +3183,10 @@ while True:
                         print(f'{p2_team[p2_current_pokemon_id]["name"]}은(는) 맹독의 피해를 입고 있다!')
                         p2_team[p2_current_pokemon_id]["current_status"][0] -= (p2_team[p2_current_pokemon_id]["current_status"][0] // 16) * p2_team[p2_current_pokemon_id]["SPoison_cnt"]
                         p2_team[p2_current_pokemon_id]["SPoison_cnt"] += 1
+                    if p2_team[p2_current_pokemon_id]['ability']=='선파워' and weather=='Sun':
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]} - 선파워')
+                        print(f'{p2_team[p2_current_pokemon_id]["name"]}은(는) 생명이 조금 깎였다!')
+                        p2_team[p2_current_pokemon_id]['current_status'][0]-=p2_team[p2_current_pokemon_id]['current_status'][0]//8
                     if p2_team[p2_current_pokemon_id]['current_status'][0] <= 0:
                         p2_team[p2_current_pokemon_id]['current_status'][0] = 0
                         print(f"{p2_team[p2_current_pokemon_id]['name']}은(는) 기절했다!")
@@ -2358,12 +3204,53 @@ while True:
                         exit()
                     if p2_team[p2_current_pokemon_id]['ability'] == '가속' and p2_team[p2_current_pokemon_id][
                         'turn'] >= 1:
-                        p2_team[p2_current_pokemon_id]['rank'][4] = min(6, p2_team[p2_current_pokemon_id]['rank'][
-                            4] + 1)
+                        print(f"{p2_team[p2_current_pokemon_id]['name']} - 가속")
+                        if p2_team[p2_current_pokemon_id]['rank'][4] == 6:
+                            print(f"{p2_team[p2_current_pokemon_id]['name']}의 스피드는 더 이상 오르지 않는다!")
+                        else:
+                            print(f"{p2_team[p2_current_pokemon_id]['name']}의 스피드가 올라갔다!")
+                            p2_team[p2_current_pokemon_id]['rank'][4] = min(6, p2_team[p2_current_pokemon_id]['rank'][
+                                4] + 1)
+                    if p2_team[p2_current_pokemon_id]['ability'] == '심술꾸러기' and p2_team[p2_current_pokemon_id][
+                        'turn'] >= 1:
+                        print(f"{p2_team[p2_current_pokemon_id]['name']} - 심술꾸러기")
+                        r1, r2 = random.sample([0, 1, 2, 3, 4], 2)
+                        ABCDS = ["공격은", "방어는", "특수공격은", "특수방어는", "스피드는"]
+                        if p2_team[p2_current_pokemon_id]['rank'][r1] == 6:
+                            print(f"{p2_team[p2_current_pokemon_id]['name']}의 {ABCDS[r1]} 더 이상 오르지 않는다!")
+                        else:
+                            print(f"{p2_team[p2_current_pokemon_id]['name']}의 {ABCDS[r1]:[:-1]}가 크게 올라갔다!")
+                            p2_team[p2_current_pokemon_id]['rank'][r1] = min(6, p2_team[p2_current_pokemon_id]['rank'][
+                                r1] + 2)
+                        if p2_team[p2_current_pokemon_id]['rank'][r2] == -6:
+                            print(f"{p2_team[p2_current_pokemon_id]['name']}의 {ABCDS[r2]} 더 이상 떨어지지 않는다!")
+                        else:
+                            print(f"{p2_team[p2_current_pokemon_id]['name']}의 {ABCDS[r2]:[:-1]}가 크게 떨어졌다!")
+                            p2_team[p2_current_pokemon_id]['rank'][r2] = max(-6, p2_team[p1_current_pokemon_id]['rank'][
+                                r2] - 2)
                 if not p1_fainted_flag:
-                    if field=="Grass" and not(('비행' in p1_team[p1_current_pokemon_id]["type"] or p1_team[p1_current_pokemon_id]['ability']=='부유') and not gravity):
+                    if field == "Grass" and not (('비행' in p1_team[p1_current_pokemon_id]["type"] or
+                                                  p1_team[p1_current_pokemon_id]['ability'] == '부유') and not gravity):
                         print("그래스필드로 인해 체력이 회복되었다!")
-                        p1_team[p1_current_pokemon_id]['current_status'][0]=p1_team[p1_current_pokemon_id]["max_status"][0]//16
+                        if p1_team[p1_current_pokemon_id]["current_status"][0] + \
+                                p1_team[p1_current_pokemon_id]["max_status"][0] // 16 < \
+                                p1_team[p1_current_pokemon_id]['max_status'][0]:
+                            p1_team[p1_current_pokemon_id]["current_status"][0] += \
+                                p1_team[p1_current_pokemon_id]["max_status"][0] // 16
+                        else:
+                            p1_team[p1_current_pokemon_id]['current_status'][0] = \
+                                p1_team[p1_current_pokemon_id]['max_status'][0]
+                    if weather == 'Rain' and p1_team[p1_current_pokemon_id]['ability'] == '젖은접시':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - 젖은접시')
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]}은 체력을 회복했다!')
+                        if p1_team[p1_current_pokemon_id]["current_status"][0] + \
+                                p1_team[p1_current_pokemon_id]["max_status"][0] // 16 < \
+                                p1_team[p1_current_pokemon_id]['max_status'][0]:
+                            p1_team[p1_current_pokemon_id]["current_status"][0] += \
+                                p1_team[p1_current_pokemon_id]["max_status"][0] // 16
+                        else:
+                            p1_team[p1_current_pokemon_id]['current_status'][0] = \
+                                p1_team[p1_current_pokemon_id]['max_status'][0]
                     if weather=='SandStorm' and not ('땅' in p1_team[p1_current_pokemon_id]["type"] or
                                                      '강철' in p1_team[p1_current_pokemon_id]["type"] or
                                                      '바위' in p1_team[p1_current_pokemon_id]["type"]) and not (
@@ -2384,6 +3271,10 @@ while True:
                         print(f'{p1_team[p1_current_pokemon_id]["name"]}은(는) 독에 의한 데미지를 입었다!')
                         p1_team[p1_current_pokemon_id]['current_status'][0] -= (p1_team[p1_current_pokemon_id]["max_status"][0] // 16) * p1_team[p1_current_pokemon_id]["SPoison_cnt"]
                         p1_team[p1_current_pokemon_id]["SPoison_cnt"] += 1
+                    if p1_team[p1_current_pokemon_id]['ability']=='선파워' and weather=='Sun':
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]} - 선파워')
+                        print(f'{p1_team[p1_current_pokemon_id]["name"]}은(는) 생명이 조금 깎였다!')
+                        p1_team[p1_current_pokemon_id]['current_status'][0]-=p1_team[p1_current_pokemon_id]['current_status'][0]//8
                     if p1_team[p1_current_pokemon_id]['current_status'][0] <= 0:
                         p1_team[p1_current_pokemon_id]['current_status'][0] = 0
                         print(f"{p1_team[p1_current_pokemon_id]['name']}은(는) 기절했다!")
@@ -2396,12 +3287,37 @@ while True:
                         wait_for_enter("battle_turn", f"2P 다음 포켓몬: {p1_team[p1_current_pokemon_id]['name']}")
                         p1_fainted_flag = 1
                         p1_current+=1
+                        print(p1_current)
                     if p1_team[p1_current_pokemon_id]['current_status'][0] == 0 and p1_current >= 2:
                         print("플레이어 1의 포켓몬이 더 이상 남지 않았습니다")
                         print("플레이어 2 승!")
                         exit()
-                    if p1_team[p1_current_pokemon_id]['ability']=='가속' and p1_team[p1_current_pokemon_id]['turn']>=1:
-                        p1_team[p1_current_pokemon_id]['rank'][4]=min(6,p1_team[p1_current_pokemon_id]['rank'][4]+1)
+                    if p1_team[p1_current_pokemon_id]['ability'] == '가속' and p1_team[p1_current_pokemon_id][
+                        'turn'] >= 1:
+                        print(f"{p1_team[p1_current_pokemon_id]['name']} - 가속")
+                        if p1_team[p1_current_pokemon_id]['rank'][4] == 6:
+                            print(f"{p1_team[p1_current_pokemon_id]['name']}의 스피드는 더 이상 오르지 않는다!")
+                        else:
+                            print(f"{p1_team[p1_current_pokemon_id]['name']}의 스피드가 올라갔다!")
+                            p1_team[p1_current_pokemon_id]['rank'][4] = min(6, p1_team[p1_current_pokemon_id]['rank'][
+                                4] + 1)
+                    if p1_team[p1_current_pokemon_id]['ability'] == '심술꾸러기' and p1_team[p1_current_pokemon_id][
+                        'turn'] >= 1:
+                        print(f"{p1_team[p1_current_pokemon_id]['name']} - 심술꾸러기")
+                        r1, r2 = random.sample([0, 1, 2, 3, 4], 2)
+                        ABCDS = ["공격은", "방어는", "특수공격은", "특수방어는", "스피드는"]
+                        if p1_team[p1_current_pokemon_id]['rank'][r1] == 6:
+                            print(f"{p1_team[p1_current_pokemon_id]['name']}의 {ABCDS[r1]} 더 이상 오르지 않는다!")
+                        else:
+                            print(f"{p1_team[p1_current_pokemon_id]['name']}의 {ABCDS[r1]:[:-1]}가 크게 올라갔다!")
+                            p1_team[p1_current_pokemon_id]['rank'][r1] = min(6, p1_team[p1_current_pokemon_id]['rank'][
+                                r1] + 2)
+                        if p1_team[p1_current_pokemon_id]['rank'][r2] == -6:
+                            print(f"{p1_team[p1_current_pokemon_id]['name']}의 {ABCDS[r2]} 더 이상 떨어지지 않는다!")
+                        else:
+                            print(f"{p1_team[p1_current_pokemon_id]['name']}의 {ABCDS[r2]:[:-1]}가 크게 떨어졌다!")
+                            p1_team[p1_current_pokemon_id]['rank'][r2] = max(-6, p1_team[p1_current_pokemon_id]['rank'][
+                                r2] - 2)
             if p1_current >= 3:
                 print("플레이어 1의 포켓몬이 더 이상 남지 않았습니다")
                 print("플레이어 2 승!")
@@ -2428,6 +3344,12 @@ while True:
             p2_l_screen_timer=max(0,p2_l_screen_timer - 1)
             if p2_l_screen_timer == 0:
                 p2_l_screen=False
+            p1_team[p1_current_pokemon_id]['skill_bind_turn']=max(0,p1_team[p1_current_pokemon_id]['skill_bind_turn'])
+            if p1_team[p1_current_pokemon_id]['skill_bind_turn'] == 0:
+                p1_team[p1_current_pokemon_id]['skill_bind']=None
+            p2_team[p2_current_pokemon_id]['skill_bind_turn'] = max(0,p2_team[p2_current_pokemon_id]['skill_bind_turn'])
+            if p2_team[p2_current_pokemon_id]['skill_bind_turn'] == 0:
+                p2_team[p2_current_pokemon_id]['skill_bind'] = None
             p1_team[p1_current_pokemon_id]['protect']=False
             p2_team[p2_current_pokemon_id]['protect']=False
     if state == "select_pokemon": draw_select_screen()

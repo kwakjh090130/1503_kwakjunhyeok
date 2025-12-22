@@ -649,6 +649,7 @@ def calculate_damage(attacker, defender, move_data, weather=None, reflect=False,
     if attacker.get('ability')=='일렉트릭스킨' and move_type == '노말':power_mod *= 1.2; move_type='전기'
     if attacker.get('ability')=='노말스킨':power_mod *= 1.2;move_type='노말'
     if move_data.get('name')=='객기' and not attacker.get('status') == None: power_mod *= 2.0
+    if move_data.get('name')=='탁쳐서떨구기' and not defender.get('item')==None: power_mod *= 1.5
 
     atk_mod = 1.0
     def_mod = 1.0
